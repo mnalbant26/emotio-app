@@ -1,0 +1,14 @@
+{
+  "name": "emotio",
+  "version": "1.0.0",
+  "description": "Emotio — your feelings diary",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "echo 'Static site ready'"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}

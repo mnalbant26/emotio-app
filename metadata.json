@@ -1,0 +1,6 @@
+{
+  "name": "Emotio",
+  "description": "A retro pixel-art feelings diary and mood tracker with multilingual support, luckwheel, and calendar overview.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

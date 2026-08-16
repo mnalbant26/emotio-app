@@ -1,0 +1,2380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emotio — your feelings diary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #241f38;
+    --bg-deep: #1a1729;
+    --panel: #322a4d;
+    --panel-light: #3d3460;
+    --cream: #f4ead8;
+    --pink: #e8a5c4;
+    --pink-dark: #c46b93;
+    --mint: #8fd4c1;
+    --mint-dark: #4f9d8a;
+    --gold: #f2c14e;
+    --gold-dark: #b5872a;
+    --rose: #c9455a;
+    --ink: #2b2440;
+    --pixel: 4px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:
+      radial-gradient(circle at 15% 8%, rgba(242,193,78,0.10) 0, transparent 32%),
+      radial-gradient(circle at 88% 18%, rgba(232,165,196,0.10) 0, transparent 30%),
+      radial-gradient(circle at 80% 92%, rgba(143,212,193,0.08) 0, transparent 34%),
+      linear-gradient(160deg, #2d2647 0%, #241f38 38%, #1e1a30 68%, #171326 100%);
+    background-attachment: fixed;
+    color: var(--cream);
+    font-family: 'VT323', monospace;
+    font-size: 20px;
+    min-height: 100vh;
+    display:flex;
+    justify-content:center;
+    padding: 32px 16px 64px;
+    image-rendering: pixelated;
+  }
+  .pixel-border{
+    border: var(--pixel) solid var(--ink);
+    box-shadow:
+      0 0 0 var(--pixel) var(--cream),
+      0 0 0 calc(var(--pixel) * 2) var(--ink);
+  }
+  /* ---------- Ambient page decor (purely decorative, non-interactive) ---------- */
+  .page-decor{
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+  }
+  .page-decor svg{
+    position: absolute;
+    shape-rendering: crispEdges;
+  }
+  .decor-twinkle{
+    animation: decor-twinkle 2.6s steps(4) infinite;
+  }
+  .decor-twinkle.d2{ animation-duration: 3.4s; animation-delay: 0.6s; }
+  .decor-twinkle.d3{ animation-duration: 2.1s; animation-delay: 1.1s; }
+  .decor-twinkle.d4{ animation-duration: 3s; animation-delay: 0.3s; }
+  @keyframes decor-twinkle{
+    0%, 100% { opacity: 0.9; }
+    50% { opacity: 0.25; }
+  }
+  .decor-float{
+    animation: decor-float 5s ease-in-out infinite;
+  }
+  .decor-float.d2{ animation-duration: 6.5s; animation-delay: 0.8s; }
+  .decor-float.d3{ animation-duration: 4.2s; animation-delay: 1.6s; }
+  @keyframes decor-float{
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @media (max-width: 720px){
+    .decor-wide{ display:none; }
+  }
+  .app{
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 620px;
+    padding-top: 44px;
+  }
+  /* ---------- Language switcher ---------- */
+  .lang-switcher{
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 10;
+    max-width: 160px;
+  }
+  .lang-btn{
+    font-family:'Press Start 2P', monospace;
+    font-size: 11px;
+    background: var(--panel-light);
+    color: var(--cream);
+    border: 3px solid var(--ink);
+    box-shadow: 0 0 0 2px var(--panel-light), 3px 3px 0 var(--ink);
+    padding: 8px 10px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    display:flex;
+    align-items:center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .lang-btn:hover{ background:#4a3f70; }
+  .lang-btn:active{ transform: translate(2px,2px); box-shadow: 0 0 0 2px var(--panel-light); }
+  .lang-menu{
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--panel);
+    border: 3px solid var(--ink);
+    box-shadow: 0 0 0 2px var(--cream), 0 0 0 4px var(--ink);
+    display: none;
+    flex-direction: column;
+    min-width: 150px;
+    overflow: hidden;
+  }
+  .lang-menu.show{ display:flex; }
+  .lang-option{
+    font-family: 'VT323', monospace;
+    font-size: 17px;
+    color: var(--cream);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--panel-light);
+    padding: 10px 14px;
+    text-align: left;
+    cursor: pointer;
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    white-space: nowrap;
+  }
+  .lang-option:last-child{ border-bottom: none; }
+  .lang-option:hover{ background: var(--panel-light); }
+  .lang-option.active{ background: var(--pink-dark); color: var(--ink); font-weight:bold; }
+  .lang-flag{
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    letter-spacing: 0;
+    background: var(--ink);
+    color: var(--gold);
+    padding: 3px 4px;
+    line-height: 1;
+    display:inline-block;
+  }
+  .lang-option .lang-flag{ font-size: 9px; }
+  /* ---------- Header / sign ---------- */
+  .header{
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--panel);
+    margin-bottom: 28px;
+  }
+  .sign{
+    display: inline-block;
+    background: var(--panel-light);
+    border: 2px solid var(--ink);
+    padding: 12px 24px;
+    position: relative;
+    margin: 8px auto 0 auto;
+  }
+  .sign::before, .sign::after{
+    content: "";
+    position: absolute;
+    top: -14px;
+    width: 6px;
+    height: 18px;
+    background: var(--gold-dark);
+  }
+  .sign::before{ left: 16%; }
+  .sign::after{ right: 16%; }
+  .title{
+    font-family: 'Press Start 2P', monospace;
+    font-size: 22px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    margin: 0;
+    text-align: center;
+    text-shadow: 3px 3px 0 var(--ink);
+  }
+  .subtitle{
+    font-size: 18px;
+    color: var(--pink);
+    margin: 12px 0 0 0;
+    text-align: center;
+    letter-spacing: 1px;
+    line-height: 1.3;
+    width: 100%;
+  }
+
+  /* ---------- Mood window (signature element) ---------- */
+  .mood-window-wrap{
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    gap: 28px;
+    margin: 24px 0 32px;
+    flex-wrap: wrap;
+  }
+  /* ---------- Emotiometer ---------- */
+  .meter-block{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .meter-body{
+    width: 46px;
+    height: 150px;
+    background: var(--bg-deep);
+    position:relative;
+    overflow:hidden;
+  }
+  .meter-tick{
+    position:absolute;
+    left:0; right:0;
+    height:2px;
+    background: var(--panel-light);
+  }
+  .meter-fill{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height: 0%;
+    background: #4f9d8a;
+    transition: height 0.4s steps(8), background 0.4s steps(4);
+  }
+  .meter-fill.warn{ background: #d9a441; }
+  .meter-fill.danger{ background: #c9455a; }
+  .meter-body.broken .meter-fill{
+    animation: meter-jitter 0.15s steps(2) infinite;
+  }
+  .meter-body.broken::before,
+  .meter-body.broken::after{
+    content:"";
+    position:absolute;
+    background: var(--ink);
+    z-index: 2;
+  }
+  .meter-body.broken::before{
+    width: 2px; height: 70%;
+    top: 0; left: 55%;
+    transform: skewX(-12deg);
+  }
+  .meter-body.broken::after{
+    width: 2px; height: 55%;
+    bottom: 0; left: 28%;
+    transform: skewX(10deg);
+  }
+  .crack{
+    position:absolute;
+    background: var(--ink);
+    z-index: 2;
+  }
+  @keyframes meter-jitter{
+    0%   { transform: translateX(0); }
+    50%  { transform: translateX(1px); }
+    100% { transform: translateX(-1px); }
+  }
+  .meter-body.rgb-mode .meter-fill{
+    height: 100% !important;
+    animation: rainbow-bg-vert 1.8s steps(6) infinite;
+  }
+  @keyframes rainbow-bg-vert{
+    0%   { background: #e8607f; }
+    16%  { background: #f2c14e; }
+    33%  { background: #8fd4c1; }
+    50%  { background: #7fa7d9; }
+    66%  { background: #a98fd2; }
+    83%  { background: #e8a5c4; }
+    100% { background: #e8607f; }
+  }
+  .meter-count{
+    font-size: 14px;
+    color: var(--cream);
+    margin-top: 8px;
+    letter-spacing:0.5px;
+  }
+  .meter-label{
+    font-family:'Press Start 2P', monospace;
+    font-size: 11px;
+    color: var(--mint);
+    margin-top: 6px;
+    letter-spacing: 1px;
+  }
+  .meter-label.danger-label{ color: var(--rose); }
+
+  /* ---------- Luckwheel ---------- */
+  .wheel-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap: 14px;
+  }
+  .wheel-stage{
+    position:relative;
+    width: 220px;
+    height: 220px;
+  }
+  .wheel-pointer{
+    position:absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 18px solid var(--gold);
+    z-index: 5;
+    filter: drop-shadow(2px 2px 0 var(--ink));
+  }
+  .wheel-svg{
+    width: 100%;
+    height: 100%;
+    transition: transform 3.2s cubic-bezier(0.12, 0.66, 0.18, 1);
+  }
+  .wheel-svg text{
+    font-family: 'VT323', monospace;
+  }
+  .wheel-hub{
+    position:absolute;
+    top:50%; left:50%;
+    transform: translate(-50%,-50%);
+    width: 30px; height:30px;
+    background: var(--gold);
+    border: 3px solid var(--ink);
+    border-radius:50%;
+    z-index: 4;
+  }
+  .wheel-status{
+    font-size: 15px;
+    color: #c9c1e0;
+    text-align:center;
+    min-height: 20px;
+  }
+  .wheel-results{
+    display:flex;
+    gap: 14px;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  .wheel-result-chip{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background: var(--bg-deep);
+    border: 2px solid var(--panel-light);
+    padding: 8px 12px;
+    font-size: 15px;
+  }
+  .wheel-result-chip .tag{
+    font-family:'Press Start 2P', monospace;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+  }
+  .wheel-result-chip.seek .tag{ color: var(--mint); }
+  .wheel-result-chip.avoid .tag{ color: var(--rose); }
+  .wheel-result-chip .emoji{ font-size: 18px; }
+  .wheel-result-chip.pending{ color: #7a7295; }
+
+  .mood-window{
+    width: 220px;
+    height: 150px;
+    background: var(--ink);
+    position:relative;
+    overflow:hidden;
+  }
+  .mood-window .sky{
+    position:absolute; inset:0;
+    transition: background 0.6s steps(6);
+  }
+  .mood-window .pixel-sun{
+    position:absolute;
+    width:26px; height:26px;
+    left: 20px; top: 16px;
+    box-shadow:
+      8px 0 0 0 currentColor,
+      16px 0 0 0 currentColor,
+      -8px 0 0 0 currentColor,
+      0 8px 0 0 currentColor,
+      0 -8px 0 0 currentColor;
+    opacity:0.9;
+  }
+  .mood-window .ground{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height: 34px;
+  }
+  .mood-window .drop{
+    position:absolute;
+    width:4px; height:10px;
+    opacity:0.8;
+  }
+  .mood-window .star{
+    position:absolute;
+    width:4px; height:4px;
+    background: var(--cream);
+  }
+  .mood-caption{
+    text-align:center;
+    font-size:16px;
+    color: var(--mint);
+    margin-top:10px;
+    letter-spacing:1px;
+    min-height: 20px;
+  }
+  .mood-caption.rollercoaster{
+    font-family:'Press Start 2P', monospace;
+    font-size: 11px;
+    line-height: 1.6;
+    animation: rainbow-text 1.8s steps(6) infinite;
+  }
+  .mood-window.rollercoaster .sky{
+    animation: rainbow-bg 1.8s steps(6) infinite;
+  }
+  .mood-window .sky.split{
+    background: none !important;
+  }
+  .mood-window .sky.split::before,
+  .mood-window .sky.split::after{
+    content:"";
+    position:absolute;
+    inset:0;
+  }
+  .mood-window .sky.split::before{
+    clip-path: polygon(0 0, 100% 0, 0 100%);
+  }
+  .mood-window .sky.split::after{
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  }
+  .mood-window .sky.pulse{
+    animation: sky-pulse 1.4s steps(4) infinite;
+  }
+  @keyframes sky-pulse{
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.25); }
+  }
+  @keyframes rainbow-bg{
+    0%   { background: linear-gradient(#e8607f,#c9455a); }
+    16%  { background: linear-gradient(#f2c14e,#b5872a); }
+    33%  { background: linear-gradient(#8fd4c1,#4f9d8a); }
+    50%  { background: linear-gradient(#7fa7d9,#5b6f9e); }
+    66%  { background: linear-gradient(#a98fd2,#6b4f9e); }
+    83%  { background: linear-gradient(#e8a5c4,#c46b93); }
+    100% { background: linear-gradient(#e8607f,#c9455a); }
+  }
+  @keyframes rainbow-text{
+    0%   { color: #e8607f; }
+    16%  { color: #f2c14e; }
+    33%  { color: #8fd4c1; }
+    50%  { color: #7fa7d9; }
+    66%  { color: #a98fd2; }
+    83%  { color: #e8a5c4; }
+    100% { color: #e8607f; }
+  }
+
+  /* ---------- Panels ---------- */
+  .panel{
+    background: var(--panel);
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+  .panel-title{
+    font-family:'Press Start 2P', monospace;
+    font-size: 12px;
+    color: var(--mint);
+    margin: 0 0 6px 0;
+    letter-spacing: 1px;
+  }
+  .panel-hint{
+    font-size: 15px;
+    color: #c9c1e0;
+    margin: 0 0 16px 0;
+  }
+
+  /* ---------- Emotion grid ---------- */
+  .emo-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+    gap: 10px;
+  }
+  .emo-tile{
+    background: var(--bg-deep);
+    border: 3px solid var(--ink);
+    box-shadow: 0 0 0 2px var(--panel-light);
+    cursor:pointer;
+    padding: 10px 4px 8px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    transition: transform 0.08s steps(2);
+    position:relative;
+  }
+  .emo-tile:hover{ transform: translateY(-2px); }
+  .emo-tile:active{ transform: translateY(1px); }
+  .emo-tile .icon{
+    width: 32px; height:32px;
+  }
+  .emo-tile .label{
+    font-size: 13px;
+    color: var(--cream);
+    text-align:center;
+    line-height:1.1;
+  }
+  .emo-tile.selected{
+    background: var(--pink-dark);
+    box-shadow: 0 0 0 2px var(--gold);
+  }
+  .emo-tile.selected .label{ color: var(--ink); font-weight:bold;}
+  .emo-tile.selected::after{
+    content:"";
+    position:absolute;
+    top:4px; right:4px;
+    width:8px; height:8px;
+    background: var(--gold);
+  }
+  .emo-tile[data-mode="avoid"].selected{
+    background: var(--rose);
+    box-shadow: 0 0 0 2px var(--cream);
+  }
+  .emo-tile[data-mode="want"].selected{
+    background: var(--mint-dark);
+    box-shadow: 0 0 0 2px var(--gold);
+  }
+
+  /* ---------- Intensity hearts ---------- */
+  .intensity-block{
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 3px dashed var(--panel-light);
+    display:none;
+  }
+  .intensity-block.show{ display:block; }
+  .intensity-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom: 10px;
+    gap: 10px;
+  }
+  .intensity-row .emo-name{
+    font-size: 16px;
+    color: var(--gold);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    min-width: 110px;
+  }
+  .intensity-row .emo-name .mini-icon{ width:18px; height:18px; }
+  .hearts{
+    display:flex;
+    gap: 4px;
+    cursor:pointer;
+  }
+  .heart{
+    width: 20px; height: 18px;
+  }
+
+  /* ---------- Diary textarea ---------- */
+  textarea{
+    width:100%;
+    background: var(--bg-deep);
+    border: 3px solid var(--ink);
+    box-shadow: 0 0 0 2px var(--panel-light);
+    color: var(--cream);
+    font-family:'VT323', monospace;
+    font-size: 18px;
+    padding: 12px;
+    resize: vertical;
+    min-height: 90px;
+    line-height:1.4;
+  }
+  textarea:focus{
+    outline: none;
+    box-shadow: 0 0 0 2px var(--gold);
+  }
+  textarea::placeholder{ color: #7a7295; }
+  .char-count{
+    font-size: 13px;
+    color: #9088ab;
+    text-align:right;
+    margin-top:4px;
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn-row{
+    display:flex;
+    gap: 12px;
+    justify-content:center;
+    margin-top: 8px;
+  }
+  .pixel-btn{
+    font-family:'Press Start 2P', monospace;
+    font-size: 12px;
+    background: var(--gold);
+    color: var(--ink);
+    border: none;
+    padding: 14px 20px;
+    cursor:pointer;
+    box-shadow: 3px 3px 0 var(--gold-dark), 3px 3px 0 3px var(--ink);
+    letter-spacing:1px;
+  }
+  .pixel-btn:hover{ background:#f7cf70; }
+  .pixel-btn:active{
+    transform: translate(3px,3px);
+    box-shadow: 0 0 0 var(--gold-dark), 0 0 0 0 var(--ink);
+  }
+  .pixel-btn.secondary{
+    background: var(--panel-light);
+    color: var(--cream);
+    box-shadow: 3px 3px 0 var(--ink), 3px 3px 0 3px var(--ink);
+  }
+  .pixel-btn.secondary:hover{ background:#4a3f70; }
+  .pixel-btn:disabled{
+    opacity:0.4;
+    cursor:not-allowed;
+  }
+
+  /* ---------- Saved toast ---------- */
+  .toast{
+    position: fixed;
+    left:50%;
+    bottom: 24px;
+    transform: translate(-50%, 20px);
+    background: var(--mint-dark);
+    color: var(--ink);
+    font-family:'Press Start 2P', monospace;
+    font-size: 11px;
+    padding: 14px 20px;
+    box-shadow: 0 0 0 3px var(--ink), 0 0 0 5px var(--mint);
+    opacity:0;
+    pointer-events:none;
+    transition: all 0.25s steps(4);
+    z-index: 20;
+  }
+  .toast.show{
+    opacity:1;
+    transform: translate(-50%, 0);
+  }
+
+  /* ---------- History ---------- */
+  .history-list{
+    display:flex;
+    flex-direction:column;
+    gap: 10px;
+  }
+  .history-item{
+    background: var(--bg-deep);
+    border: 3px solid var(--ink);
+    box-shadow: 0 0 0 2px var(--panel-light);
+    padding: 10px 12px;
+    cursor:pointer;
+  }
+  .history-item:hover{ box-shadow: 0 0 0 2px var(--gold); }
+  .history-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size: 15px;
+    color: var(--gold);
+  }
+  .history-icons{
+    display:flex;
+    gap:6px;
+    margin-top:6px;
+  }
+  .history-icons img{ width:20px; height:20px; }
+  .history-note{
+    font-size: 14px;
+    color: #c9c1e0;
+    margin-top: 6px;
+    max-height: 40px;
+    overflow:hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .empty-state{
+    font-size: 15px;
+    color: #9088ab;
+    text-align:center;
+    padding: 12px 0;
+  }
+
+  .footer-note{
+    text-align:center;
+    font-size: 13px;
+    color: #6b6390;
+    margin-top: 20px;
+    letter-spacing:0.5px;
+  }
+
+  /* ---------- Calendar ---------- */
+  .cal-nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom: 14px;
+  }
+  .cal-nav-btn{
+    font-family:'Press Start 2P', monospace;
+    font-size: 12px;
+    background: var(--panel-light);
+    color: var(--cream);
+    border: none;
+    padding: 8px 12px;
+    cursor:pointer;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+  .cal-nav-btn:hover{ background:#4a3f70; }
+  .cal-nav-btn:active{ transform: translate(2px,2px); box-shadow:none; }
+  .cal-month-label{
+    font-family:'Press Start 2P', monospace;
+    font-size: 13px;
+    color: var(--gold);
+    letter-spacing:1px;
+  }
+  .cal-weekdays{
+    display:grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+  .cal-weekdays span{
+    font-size: 13px;
+    color: #9088ab;
+    text-align:center;
+  }
+  .cal-grid{
+    display:grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  .cal-cell{
+    aspect-ratio: 1;
+    background: var(--bg-deep);
+    border: 2px solid var(--panel-light);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    font-size: 13px;
+    color: #8a82a8;
+  }
+  .cal-cell.empty{
+    background: transparent;
+    border: none;
+  }
+  .cal-cell.has-entry{
+    cursor:pointer;
+    color: var(--cream);
+    border-color: var(--gold-dark);
+  }
+  .cal-cell.has-entry:hover{
+    border-color: var(--gold);
+    transform: translateY(-1px);
+  }
+  .cal-cell.today{
+    box-shadow: 0 0 0 2px var(--mint) inset;
+  }
+  .cal-cell .dot{
+    width: 7px; height: 7px;
+    margin-top: 3px;
+  }
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(15,12,26,0.8);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index: 30;
+    padding: 20px;
+  }
+  .modal-overlay.show{ display:flex; }
+  .modal-box{
+    background: var(--panel);
+    max-width: 440px;
+    width: 100%;
+    max-height: 82vh;
+    overflow-y: auto;
+    padding: 22px;
+    position:relative;
+  }
+  .modal-close{
+    position:absolute;
+    top: 10px; right: 10px;
+    background: var(--rose);
+    color: var(--cream);
+    border: 2px solid var(--ink);
+    width: 28px; height: 28px;
+    font-family:'Press Start 2P', monospace;
+    font-size: 11px;
+    cursor:pointer;
+    line-height:1;
+  }
+  .modal-close:hover{ background:#e2566d; }
+  .modal-date{
+    font-family:'Press Start 2P', monospace;
+    font-size: 14px;
+    color: var(--gold);
+    margin: 0 0 18px 0;
+    padding-right: 30px;
+  }
+  .modal-section{
+    margin-bottom: 18px;
+  }
+  .modal-section-label{
+    font-size: 14px;
+    color: var(--mint);
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .modal-emo-list{
+    display:flex;
+    flex-wrap:wrap;
+    gap: 8px;
+  }
+  .modal-emo-chip{
+    display:flex;
+    align-items:center;
+    gap: 6px;
+    background: var(--bg-deep);
+    border: 2px solid var(--panel-light);
+    padding: 5px 9px;
+    font-size: 14px;
+  }
+  .modal-emo-chip img{ width:18px; height:18px; }
+  .modal-emo-chip .chip-hearts{
+    display:flex;
+    gap:1px;
+    margin-left: 4px;
+  }
+  .modal-emo-chip .chip-hearts img{ width:11px; height:10px; }
+  .modal-note{
+    font-size: 16px;
+    color: var(--cream);
+    background: var(--bg-deep);
+    border: 2px solid var(--panel-light);
+    padding: 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+  .modal-empty{
+    font-size: 14px;
+    color: #8a82a8;
+  }
+
+  /* ---------- Mobile & Responsive Rules ---------- */
+  @media (max-width: 640px){
+    body{
+      padding: 14px 10px 48px;
+    }
+    .app{
+      padding-top: 46px;
+      max-width: 100%;
+    }
+    .lang-switcher{
+      top: 10px;
+      right: 10px;
+    }
+    .lang-btn{
+      font-size: 10px;
+      padding: 8px 10px;
+      min-height: 38px;
+    }
+    .panel{
+      padding: 16px 12px;
+      margin-bottom: 18px;
+    }
+    .panel-title{
+      font-size: 11px;
+    }
+    .panel-hint{
+      font-size: 14px;
+      margin-bottom: 14px;
+    }
+    .emo-grid{
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .emo-tile{
+      padding: 8px 2px 6px;
+      min-height: 62px;
+    }
+    .emo-tile .icon{
+      width: 28px;
+      height: 28px;
+    }
+    .emo-tile .label{
+      font-size: 12px;
+    }
+    .intensity-row{
+      gap: 8px;
+    }
+    .intensity-row .emo-name{
+      font-size: 15px;
+      min-width: 80px;
+    }
+    .heart{
+      width: 22px;
+      height: 20px;
+    }
+    .btn-row{
+      gap: 8px;
+    }
+    .btn-row .pixel-btn{
+      flex: 1;
+      padding: 14px 8px;
+      font-size: 11px;
+      text-align: center;
+    }
+    .modal-box{
+      padding: 18px 14px;
+      max-height: 86vh;
+    }
+    .modal-date{
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+  }
+
+  @media (max-width: 440px){
+    .header{
+      padding: 16px 10px !important;
+      margin-bottom: 22px;
+    }
+    .sign{
+      padding: 10px 18px;
+    }
+    .sign::before, .sign::after{
+      top: -12px;
+      height: 16px;
+      width: 5px;
+    }
+    .title{
+      font-size: 18px;
+      letter-spacing: 1px;
+    }
+    .subtitle{
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    .mood-window-wrap{
+      gap: 16px;
+      margin: 18px 0 24px;
+    }
+    .mood-window{
+      width: 196px;
+      height: 136px;
+    }
+    .meter-body{
+      width: 40px;
+      height: 136px;
+    }
+    .wheel-stage{
+      width: 200px;
+      height: 200px;
+    }
+    .wheel-results{
+      flex-direction: column;
+      width: 100%;
+      gap: 8px;
+    }
+    .wheel-result-chip{
+      width: 100%;
+      justify-content: center;
+    }
+    .cal-nav-btn{
+      padding: 6px 10px;
+      font-size: 11px;
+    }
+    .cal-month-label{
+      font-size: 11px;
+    }
+    .cal-weekdays span{
+      font-size: 12px;
+    }
+    .cal-grid{
+      gap: 3px;
+    }
+    .cal-cell{
+      font-size: 12px;
+      min-height: 32px;
+    }
+    .cal-cell .dot{
+      width: 6px;
+      height: 6px;
+    }
+    .toast{
+      font-size: 10px;
+      padding: 12px 16px;
+      max-width: 90vw;
+      text-align: center;
+    }
+  }
+
+  @media (max-width: 360px){
+    .title{
+      font-size: 15px;
+    }
+    .subtitle{
+      font-size: 14px;
+    }
+    .sign{
+      padding: 8px 12px;
+    }
+    .emo-grid{
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .mood-window{
+      width: 170px;
+      height: 120px;
+    }
+    .meter-body{
+      width: 36px;
+      height: 120px;
+    }
+    .wheel-stage{
+      width: 180px;
+      height: 180px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="page-decor" aria-hidden="true">
+  <svg class="decor-twinkle" style="top:6%; left:6%; width:10px; height:10px;" viewBox="0 0 10 10"><rect x="4" y="0" width="2" height="10" fill="#f2c14e"/><rect x="0" y="4" width="10" height="2" fill="#f2c14e"/></svg>
+  <svg class="decor-twinkle d2" style="top:14%; left:11%; width:6px; height:6px;" viewBox="0 0 6 6"><rect x="2" y="0" width="2" height="6" fill="#e8a5c4"/><rect x="0" y="2" width="6" height="2" fill="#e8a5c4"/></svg>
+  <svg class="decor-twinkle d3 decor-wide" style="top:34%; left:5%; width:8px; height:8px;" viewBox="0 0 8 8"><rect x="3" y="0" width="2" height="8" fill="#8fd4c1"/><rect x="0" y="3" width="8" height="2" fill="#8fd4c1"/></svg>
+  <svg class="decor-float decor-wide" style="top:20%; left:3.5%; width:34px; height:24px;" viewBox="0 0 17 12"><rect x="4" y="2" width="9" height="2" fill="#3d3460"/><rect x="2" y="4" width="13" height="3" fill="#3d3460"/><rect x="0" y="7" width="17" height="2" fill="#3d3460"/><rect x="3" y="9" width="11" height="2" fill="#3d3460"/></svg>
+  <svg class="decor-float d2 decor-wide" style="top:52%; left:6%; width:22px; height:22px;" viewBox="0 0 11 11"><rect x="4" y="0" width="3" height="3" fill="#e8607f"/><rect x="1" y="0" width="3" height="3" fill="#e8607f"/><rect x="0" y="3" width="11" height="3" fill="#e8607f"/><rect x="1" y="6" width="9" height="2" fill="#e8607f"/><rect x="2" y="8" width="7" height="1" fill="#e8607f"/><rect x="3" y="9" width="5" height="1" fill="#e8607f"/><rect x="4" y="10" width="3" height="1" fill="#e8607f"/></svg>
+  <svg class="decor-twinkle" style="top:66%; left:9%; width:6px; height:6px;" viewBox="0 0 6 6"><rect x="2" y="0" width="2" height="6" fill="#f2c14e"/><rect x="0" y="2" width="6" height="2" fill="#f2c14e"/></svg>
+
+  <svg class="decor-twinkle" style="top:9%; right:7%; width:8px; height:8px;" viewBox="0 0 8 8"><rect x="3" y="0" width="2" height="8" fill="#8fd4c1"/><rect x="0" y="3" width="8" height="2" fill="#8fd4c1"/></svg>
+  <svg class="decor-float decor-wide" style="top:24%; right:4%; width:26px; height:26px;" viewBox="0 0 13 13"><rect x="4" y="0" width="6" height="2" fill="#f2c14e"/><rect x="2" y="2" width="2" height="2" fill="#f2c14e"/><rect x="9" y="2" width="2" height="2" fill="#f2c14e"/><rect x="0" y="4" width="2" height="5" fill="#f2c14e"/><rect x="11" y="4" width="2" height="5" fill="#f2c14e"/><rect x="4" y="4" width="6" height="6" fill="#f2c14e"/><rect x="2" y="9" width="2" height="2" fill="#f2c14e"/><rect x="9" y="9" width="2" height="2" fill="#f2c14e"/><rect x="4" y="11" width="6" height="2" fill="#f2c14e"/></svg>
+  <svg class="decor-twinkle d2 decor-wide" style="top:40%; right:9%; width:6px; height:6px;" viewBox="0 0 6 6"><rect x="2" y="0" width="2" height="6" fill="#e8a5c4"/><rect x="0" y="2" width="6" height="2" fill="#e8a5c4"/></svg>
+  <svg class="decor-float d3 decor-wide" style="top:58%; right:5.5%; width:20px; height:20px;" viewBox="0 0 10 10"><rect x="4" y="0" width="2" height="10" fill="#c9c1e0"/><rect x="0" y="4" width="10" height="2" fill="#c9c1e0"/><rect x="1" y="1" width="2" height="2" fill="#c9c1e0"/><rect x="7" y="1" width="2" height="2" fill="#c9c1e0"/><rect x="1" y="7" width="2" height="2" fill="#c9c1e0"/><rect x="7" y="7" width="2" height="2" fill="#c9c1e0"/></svg>
+  <svg class="decor-twinkle d3" style="top:76%; right:8%; width:8px; height:8px;" viewBox="0 0 8 8"><rect x="3" y="0" width="2" height="8" fill="#f2c14e"/><rect x="0" y="3" width="8" height="2" fill="#f2c14e"/></svg>
+  <svg class="decor-twinkle d4 decor-wide" style="top:88%; right:12%; width:6px; height:6px;" viewBox="0 0 6 6"><rect x="2" y="0" width="2" height="6" fill="#8fd4c1"/><rect x="0" y="2" width="6" height="2" fill="#8fd4c1"/></svg>
+</div>
+
+<div class="lang-switcher">
+  <button class="lang-btn" id="langBtn" aria-haspopup="true" aria-expanded="false">
+    <span class="lang-flag" id="langBtnFlag">EN</span>
+  </button>
+  <div class="lang-menu" id="langMenu">
+    <button class="lang-option" data-lang="en"><span class="lang-flag">EN</span>English</button>
+    <button class="lang-option" data-lang="tr"><span class="lang-flag">TR</span>Türkçe</button>
+    <button class="lang-option" data-lang="ja"><span class="lang-flag">JA</span>日本語</button>
+    <button class="lang-option" data-lang="ru"><span class="lang-flag">RU</span>Русский</button>
+  </div>
+</div>
+
+<div class="app">
+
+  <div class="header pixel-border" style="padding:20px 12px;">
+    <div class="sign">
+      <p class="title">EMOTIO</p>
+    </div>
+    <p class="subtitle" data-i18n="subtitle">a tiny window into how you feel</p>
+  </div>
+
+  <div class="mood-window-wrap">
+    <div>
+      <div class="mood-window pixel-border" id="moodWindow">
+        <div class="sky" id="moodSky"></div>
+      </div>
+      <div class="mood-caption" id="moodCaption">pick a feeling to light the window</div>
+    </div>
+    <div class="meter-block">
+      <div class="meter-body pixel-border" id="meterBody">
+        <div class="meter-fill" id="meterFill"></div>
+      </div>
+      <div class="meter-count" id="meterCount">0 / 16</div>
+      <div class="meter-label" id="meterLabel" data-i18n="meterLabel">EMOTIOMETER</div>
+    </div>
+  </div>
+
+  <div class="panel pixel-border">
+    <p class="panel-title" data-i18n="feltTitle">TODAY I FELT</p>
+    <p class="panel-hint" data-i18n="feltHint">tap every emotion that visited you today</p>
+    <div class="emo-grid" id="feltGrid"></div>
+    <div class="intensity-block" id="feltIntensity">
+      <div id="feltIntensityRows"></div>
+    </div>
+  </div>
+
+  <div class="panel pixel-border">
+    <p class="panel-title" data-i18n="avoidTitle">I DIDN'T WANT TO FEEL</p>
+    <p class="panel-hint" data-i18n="avoidHint">the ones you'd have liked to skip today</p>
+    <div class="emo-grid" id="avoidGrid"></div>
+  </div>
+
+  <div class="panel pixel-border">
+    <p class="panel-title" data-i18n="wantTitle">I WISH I FELT MORE</p>
+    <p class="panel-hint" data-i18n="wantHint">what you're hoping to feel today or tomorrow</p>
+    <div class="emo-grid" id="wantGrid"></div>
+  </div>
+
+  <div class="panel pixel-border">
+    <p class="panel-title" data-i18n="noteTitle">A FEW WORDS</p>
+    <p class="panel-hint" data-i18n="noteHint">how was today, in your own words?</p>
+    <textarea id="diaryText" maxlength="400" data-i18n-placeholder="notePlaceholder" placeholder="today was..."></textarea>
+    <div class="char-count"><span id="charCount">0</span>/400</div>
+  </div>
+
+  <div class="panel pixel-border">
+    <p class="panel-title" data-i18n="wheelTitle">LUCKWHEEL</p>
+    <p class="panel-hint" data-i18n="wheelHint">spin twice a day — the first spin picks what to seek, the second picks what to avoid</p>
+    <div class="wheel-wrap">
+      <div class="wheel-stage">
+        <div class="wheel-pointer"></div>
+        <div class="wheel-hub"></div>
+        <svg class="wheel-svg" id="wheelSvg" viewBox="0 0 220 220"></svg>
+      </div>
+      <button class="pixel-btn" id="spinBtn" data-i18n="spinBtn">SPIN</button>
+      <p class="wheel-status" id="wheelStatus">2 spins left today</p>
+      <div class="wheel-results">
+        <div class="wheel-result-chip pending" id="seekChip">
+          <span class="tag" data-i18n="tagSeek">SEEK</span><span data-i18n="notSpun">not spun yet</span>
+        </div>
+        <div class="wheel-result-chip pending" id="avoidChip">
+          <span class="tag" data-i18n="tagAvoid">AVOID</span><span data-i18n="notSpun">not spun yet</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="pixel-btn" id="saveBtn" data-i18n="saveBtn">SAVE TODAY</button>
+    <button class="pixel-btn secondary" id="clearBtn" data-i18n="clearBtn">CLEAR</button>
+  </div>
+
+  <div class="panel pixel-border" style="margin-top:32px;">
+    <p class="panel-title" data-i18n="pastTitle">PAST ENTRIES</p>
+    <p class="panel-hint" data-i18n="pastHint">tap a lit-up day to see how it felt</p>
+    <div class="cal-nav">
+      <button class="cal-nav-btn" id="calPrev">&lt;</button>
+      <span class="cal-month-label" id="calMonthLabel">MONTH</span>
+      <button class="cal-nav-btn" id="calNext">&gt;</button>
+    </div>
+    <div class="cal-weekdays" id="calWeekdays">
+      <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+
+  <p class="footer-note" data-i18n="footerNote">entries are stored on this device only</p>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box pixel-border">
+    <button class="modal-close" id="modalClose">X</button>
+    <p class="modal-date" id="modalDate">DATE</p>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">PAGE SAVED</div>
+
+<script>
+/* ---------------- Storage polyfill ---------------- */
+if (!window.storage) {
+  const memStore = new Map();
+  window.storage = {
+    get: async (key) => {
+      try {
+        const val = localStorage.getItem(key);
+        return val !== null ? { value: val } : null;
+      } catch (e) {
+        const val = memStore.get(key);
+        return val !== undefined ? { value: val } : null;
+      }
+    },
+    set: async (key, value) => {
+      try {
+        localStorage.setItem(key, value);
+      } catch (e) {
+        memStore.set(key, value);
+      }
+      return true;
+    },
+    delete: async (key) => {
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {
+        memStore.delete(key);
+      }
+      return true;
+    }
+  };
+}
+
+/* ---------------- i18n ---------------- */
+const I18N = {
+en: {
+  subtitle: "a tiny window into how you feel",
+  meterLabel: "EMOTIOMETER",
+  meterLabelOverload: "EMOTIOMETER (OVERLOADED)",
+  feltTitle: "TODAY I FELT",
+  feltHint: "tap every emotion that visited you today",
+  avoidTitle: "I DIDN'T WANT TO FEEL",
+  avoidHint: "the ones you'd have liked to skip today",
+  wantTitle: "I WISH I FELT MORE",
+  wantHint: "what you're hoping to feel today or tomorrow",
+  noteTitle: "A FEW WORDS",
+  noteHint: "how was today, in your own words?",
+  notePlaceholder: "today was...",
+  wheelTitle: "LUCKWHEEL",
+  wheelHint: "spin twice a day — the first spin picks what to seek, the second picks what to avoid",
+  spinBtn: "SPIN",
+  tagSeek: "SEEK",
+  tagAvoid: "AVOID",
+  notSpun: "not spun yet",
+  saveBtn: "SAVE TODAY",
+  clearBtn: "CLEAR",
+  pastTitle: "PAST ENTRIES",
+  pastHint: "tap a lit-up day to see how it felt",
+  footerNote: "entries are stored on this device only",
+  pickFeeling: "pick a feeling to light the window",
+  rollercoaster: "Wow, rollercoaster of emotions",
+  spinsLeft: (n)=> `${n} spin${n===1?'':'s'} left today`,
+  noSpinsLeft: "no spins left today — come back tomorrow",
+  pickSomethingFirst: "PICK SOMETHING FIRST",
+  pageSaved: "PAGE SAVED",
+  modalFelt: "felt that day",
+  modalAvoid: "wanted to avoid",
+  modalWant: "wished for more",
+  modalWheel: "luckwheel",
+  modalNote: "the note",
+  modalNothing: "nothing logged here",
+  modalNoNote: "no note written",
+  modalWheelEmpty: "wheel not spun that day",
+  modalSeekPrefix: "seek",
+  modalAvoidPrefix: "avoid",
+  months: ['january','february','march','april','may','june','july','august','september','october','november','december'],
+  weekdays: ['S','M','T','W','T','F','S'],
+  emotions: { joy:'joy', sadness:'sadness', anger:'anger', fear:'fear', disgust:'disgust', surprise:'surprise', calm:'calm', love:'love', anxious:'anxious', tired:'tired', hope:'hope', loneliness:'lonely', gratitude:'grateful', pride:'pride', shame:'shame', confused:'confused' },
+  wheelEmotions: { joy:'joy', fear:'fear', hope:'hope', sadness:'sadness', calmness:'calmness', loneliness:'loneliness', love:'love' },
+  moodCaptions: {
+    joy: 'a bright, sunny sort of day', sadness: 'soft rain against the glass', anger: 'a hot, stormy sky',
+    fear: 'shadows in the corners', disgust: 'a murky, uneasy green', surprise: 'something unexpected in the air',
+    calm: 'still water, quiet breeze', love: 'warm and glowing', anxious: 'a restless, flickering light',
+    tired: 'dim and drowsy', hope: 'first light breaking through', loneliness: 'a wide, empty sky',
+    gratitude: 'golden hour, lingering', pride: 'standing tall in the light', shame: 'curtains half drawn',
+    confused: "clouds that won't settle", default: 'pick a feeling to light the window'
+  },
+  comboCaptions: {
+    'anger+sadness+surprise': 'a shocking event',
+    'fear+sadness+surprise': 'blindsided and shaken',
+    'anger+disgust+fear': 'on edge and fed up',
+    'gratitude+joy+love': 'heart completely full',
+    'anxious+fear+tired': 'running on empty nerves',
+    'confused+fear+surprise': 'caught completely off guard',
+    'anger+joy': 'a confusing mix of feelings',
+    'fear+surprise': 'startled and unsettled',
+    'joy+sadness': 'bittersweet, in every sense',
+    'anger+sadness': 'hurt turning into frustration',
+    'anxious+calm': 'trying to stay steady',
+    'fear+love': 'caring, but a little afraid',
+    'pride+shame': "proud, but not sure you should be",
+    'anxious+hope': 'hopeful, if a little nervous',
+    'love+loneliness': 'missing someone you care about',
+    'anger+disgust': 'fed up and frustrated',
+    'confused+surprise': 'not sure what just happened',
+    'gratitude+sadness': 'grateful, but grieving something'
+  }
+},
+tr: {
+  subtitle: "duygularına açılan küçük bir pencere",
+  meterLabel: "DUYGU\u00d6L\u00c7ER",
+  meterLabelOverload: "DUYGU\u00d6L\u00c7ER (A\u015eIRI Y\u00dcKLENDI)",
+  feltTitle: "BUG\u00dcN HISSETTIKLERIM",
+  feltHint: "bug\u00fcn seni ziyaret eden her duyguya dokun",
+  avoidTitle: "HISSETMEK ISTEMEDIKLERIM",
+  avoidHint: "bug\u00fcn atlamak isteyeceklerin",
+  wantTitle: "KE\u015eKE DAHA ÇOK HISSETSEYDIM",
+  wantHint: "bug\u00fcn ya da yar\u0131n hissetmeyi umdu\u011fun",
+  noteTitle: "BIR KAÇ SÖZ",
+  noteHint: "bug\u00fcn nas\u0131ld\u0131, kendi c\u00fcmlelerinle?",
+  notePlaceholder: "bug\u00fcn şöyleydi...",
+  wheelTitle: "ŞANS ÇARKI",
+  wheelHint: "g\u00fcnde iki kez \u00e7evir — ilk \u00e7evirişte ne arayacağını, ikincisinde nelerden ka\u00e7\u0131naca\u011f\u0131n\u0131 se\u00e7er",
+  spinBtn: "ÇEVİR",
+  tagSeek: "ARA",
+  tagAvoid: "KAÇIN",
+  notSpun: "hen\u00fcz \u00e7evrilmedi",
+  saveBtn: "BUG\u00dcN\u00dc KAYDET",
+  clearBtn: "TEMİZLE",
+  pastTitle: "GE\u00c7MİŞ G\u00dcNLER",
+  pastHint: "nas\u0131l ge\u00e7ti\u011fini g\u00f6rmek i\u00e7in \u0131\u015f\u0131kl\u0131 bir g\u00fcne dokun",
+  footerNote: "kay\u0131tlar yaln\u0131zca bu cihazda saklan\u0131r",
+  pickFeeling: "pencereyi ayd\u0131nlatmak i\u00e7in bir duygu se\u00e7",
+  rollercoaster: "Vay canına, tam bir duygu patlaması!",
+  spinsLeft: (n)=> `bug\u00fcn ${n} \u00e7evirme hakk\u0131n kald\u0131`,
+  noSpinsLeft: "bug\u00fcnl\u00fck \u00e7evirme hakk\u0131n bitti — yar\u0131n tekrar gel",
+  pickSomethingFirst: "\u00d6NCE BİR ŞEY SEÇ",
+  pageSaved: "SAYFA KAYDEDİLDİ",
+  modalFelt: "o g\u00fcn hissedilenler",
+  modalAvoid: "ka\u00e7\u0131n\u0131lmak istenenler",
+  modalWant: "daha \u00e7ok istenenler",
+  modalWheel: "şans \u00e7ark\u0131",
+  modalNote: "not",
+  modalNothing: "burada bir şey yok",
+  modalNoNote: "not yaz\u0131lmam\u0131ş",
+  modalWheelEmpty: "o g\u00fcn \u00e7ark \u00e7evrilmemiş",
+  modalSeekPrefix: "aran\u0131lan",
+  modalAvoidPrefix: "ka\u00e7\u0131n\u0131lan",
+  months: ['ocak','şubat','mart','nisan','may\u0131s','haziran','temmuz','a\u011fustos','eyl\u00fcl','ekim','kas\u0131m','aral\u0131k'],
+  weekdays: ['P','P','S','Ç','P','C','C'],
+  emotions: { joy:'neşe', sadness:'\u00fcz\u00fcnt\u00fc', anger:'\u00f6fke', fear:'korku', disgust:'i\u011frenme', surprise:'şaşk\u0131nl\u0131k', calm:'huzur', love:'sevgi', anxious:'kayg\u0131', tired:'yorgunluk', hope:'umut', loneliness:'yaln\u0131zl\u0131k', gratitude:'minnettarl\u0131k', pride:'gurur', shame:'utan\u00e7', confused:'kafa kar\u0131ş\u0131kl\u0131\u011f\u0131' },
+  wheelEmotions: { joy:'neşe', fear:'korku', hope:'umut', sadness:'\u00fcz\u00fcnt\u00fc', calmness:'huzur', loneliness:'yaln\u0131zl\u0131k', love:'sevgi' },
+  moodCaptions: {
+    joy: 'p\u0131r\u0131l p\u0131r\u0131l, g\u00fcneşli bir g\u00fcn', sadness: 'cama d\u00fcşen hafif bir yağmur', anger: 'kavurucu, f\u0131rt\u0131nal\u0131 bir g\u00f6ky\u00fcz\u00fc',
+    fear: 'k\u00f6şe bucakta gölgeler', disgust: 'bulan\u0131k, tedirgin edici bir yeşil', surprise: 'havada beklenmedik bir şey var',
+    calm: 'durgun su, hafif bir esinti', love: 's\u0131cac\u0131k ve ışıl ışıl', anxious: 'huzursuz, titreyen bir ışık',
+    tired: 'loş ve uykulu', hope: 'sızan ilk ışık', loneliness: 'uçsuz bucaks\u0131z, boş bir g\u00f6ky\u00fcz\u00fc',
+    gratitude: 'uzayıp giden alt\u0131n saat', pride: 'ışığın içinde dimdik durmak', shame: 'yar\u0131 çekili perdeler',
+    confused: 'bir t\u00fcrl\u00fc dağılmayan bulutlar', default: 'pencereyi ayd\u0131nlatmak i\u00e7in bir duygu se\u00e7'
+  },
+  comboCaptions: {
+    'anger+sadness+surprise': 'şok edici bir olay',
+    'fear+sadness+surprise': 'haz\u0131rl\u0131ks\u0131z yakaland\u0131n, sars\u0131ld\u0131n',
+    'anger+disgust+fear': 'gergin ve b\u0131km\u0131ş',
+    'gratitude+joy+love': 'yürek tıka basa dolu',
+    'anxious+fear+tired': 'sinirler tükenmek üzere',
+    'confused+fear+surprise': 'tamamen habersiz yakaland\u0131n',
+    'anger+joy': 'kar\u0131ş\u0131k, çelişkili duygular',
+    'fear+surprise': 'irkilmiş ve tedirgin',
+    'joy+sadness': 'tam anlam\u0131yla tatl\u0131 bir hüzün',
+    'anger+sadness': 'incinme öfkeye dönüşüyor',
+    'anxious+calm': 'sakin kalmaya çal\u0131şmak',
+    'fear+love': 'seviyorsun ama biraz da korkuyorsun',
+    'pride+shame': 'gururlusun ama hakl\u0131 m\u0131s\u0131n bilmiyorsun',
+    'anxious+hope': 'umutlusun, biraz da gergin',
+    'love+loneliness': 'değer verdiğin birini özlemek',
+    'anger+disgust': 'b\u0131km\u0131ş ve sinirli',
+    'confused+surprise': 'ne olduğunu tam anlamamış olmak',
+    'gratitude+sadness': 'minnettars\u0131n ama bir şeye yas da tutuyorsun'
+  }
+},
+ja: {
+  subtitle: "\u3042\u306a\u305f\u306e\u6c17\u6301\u3061\u3092\u306e\u305e\u304f\u3001\u5c0f\u3055\u306a\u7a93",
+  meterLabel: "\u30a8\u30e2\u30fc\u30b7\u30e7\u30e1\u30fc\u30bf\u30fc",
+  meterLabelOverload: "\u30a8\u30e2\u30fc\u30b7\u30e7\u30e1\u30fc\u30bf\u30fc\uff08\u6c17\u6301\u3061\u3067\u3044\u3063\u3071\u3044\uff09",
+  feltTitle: "\u4eca\u65e5\u611f\u3058\u305f\u3053\u3068",
+  feltHint: "\u4eca\u65e5\u8a2a\u308c\u305f\u6c17\u6301\u3061\u3092\u3059\u3079\u3066\u30bf\u30c3\u30d7",
+  avoidTitle: "\u611f\u3058\u305f\u304f\u306a\u304b\u3063\u305f\u3053\u3068",
+  avoidHint: "\u3067\u304d\u308c\u3070\u907f\u3051\u305f\u304b\u3063\u305f\u6c17\u6301\u3061",
+  wantTitle: "\u3082\u3063\u3068\u611f\u3058\u305f\u304b\u3063\u305f\u3053\u3068",
+  wantHint: "\u4eca\u65e5\u304b\u660e\u65e5\u3001\u611f\u3058\u305f\u3044\u3068\u601d\u3046\u3053\u3068",
+  noteTitle: "\u3072\u3068\u3053\u3068",
+  noteHint: "\u4eca\u65e5\u306f\u3069\u3093\u306a\u4e00\u65e5\u3067\u3057\u305f\u304b\uff1f",
+  notePlaceholder: "\u4eca\u65e5\u306f\u2026",
+  wheelTitle: "\u30e9\u30c3\u30af\u30db\u30a4\u30fc\u30eb",
+  wheelHint: "1\u65e5\u306b2\u56de\u56de\u305b\u308b\u2014\u6700\u521d\u306e\u4e00\u56de\u3067\u6c42\u3081\u308b\u3082\u306e\u3092\u3001\u6b21\u306e\u4e00\u56de\u3067\u907f\u3051\u308b\u3082\u306e\u3092\u6c7a\u3081\u308b",
+  spinBtn: "\u56de\u3059",
+  tagSeek: "\u6c42\u3081\u308b",
+  tagAvoid: "\u907f\u3051\u308b",
+  notSpun: "\u307e\u3060\u56de\u3057\u3066\u3044\u306a\u3044",
+  saveBtn: "\u4fdd\u5b58\u3059\u308b",
+  clearBtn: "\u30af\u30ea\u30a2",
+  pastTitle: "\u3053\u308c\u307e\u3067\u306e\u8a18\u9332",
+  pastHint: "\u5149\u3063\u3066\u3044\u308b\u65e5\u3092\u30bf\u30c3\u30d7\u3059\u308b\u3068\u3001\u305d\u306e\u65e5\u306e\u6c17\u6301\u3061\u304c\u898b\u3089\u308c\u308b",
+  footerNote: "\u8a18\u9332\u306f\u3053\u306e\u7aef\u672b\u306b\u306e\u307f\u4fdd\u5b58\u3055\u308c\u307e\u3059",
+  pickFeeling: "\u7a93\u3092\u707d\u3059\u305f\u3081\u306b\u6c17\u6301\u3061\u3092\u9078\u3093\u3067\u306d",
+  rollercoaster: "\u308f\u3041\u3001\u6c17\u6301\u3061\u306e\u30b8\u30a7\u30c3\u30c8\u30b3\u30fc\u30b9\u30bf\u30fc\u3060\u306d",
+  spinsLeft: (n)=> `\u4eca\u65e5\u306e\u6b8b\u308a\u56de\u6570\uff1a${n}\u56de`,
+  noSpinsLeft: "\u4eca\u65e5\u306e\u56de\u6570\u306f\u4f7f\u3044\u5207\u3063\u305f\u3088\u2014\u307e\u305f\u660e\u65e5\u306d",
+  pickSomethingFirst: "\u307e\u305a\u4f55\u304b\u9078\u3093\u3067\u306d",
+  pageSaved: "\u4fdd\u5b58\u3057\u305f\u3088",
+  modalFelt: "\u305d\u306e\u65e5\u611f\u3058\u305f\u3053\u3068",
+  modalAvoid: "\u907f\u3051\u305f\u304b\u3063\u305f\u3053\u3068",
+  modalWant: "\u3082\u3063\u3068\u6b32\u3057\u304b\u3063\u305f\u3053\u3068",
+  modalWheel: "\u30e9\u30c3\u30af\u30db\u30a4\u30fc\u30eb",
+  modalNote: "\u30e1\u30e2",
+  modalNothing: "\u4f55\u3082\u8a18\u9332\u3055\u308c\u3066\u3044\u307e\u305b\u3093",
+  modalNoNote: "\u30e1\u30e2\u306f\u3042\u308a\u307e\u305b\u3093",
+  modalWheelEmpty: "\u305d\u306e\u65e5\u306f\u30db\u30a4\u30fc\u30eb\u3092\u56de\u3057\u3066\u3044\u307e\u305b\u3093",
+  modalSeekPrefix: "\u6c42\u3081\u305f",
+  modalAvoidPrefix: "\u907f\u3051\u305f",
+  months: ['1\u6708','2\u6708','3\u6708','4\u6708','5\u6708','6\u6708','7\u6708','8\u6708','9\u6708','10\u6708','11\u6708','12\u6708'],
+  weekdays: ['\u65e5','\u6708','\u706b','\u6c34','\u6728','\u91d1','\u571f'],
+  emotions: { joy:'\u3088\u308d\u3053\u3073', sadness:'\u60b2\u3057\u307f', anger:'\u6012\u308a', fear:'\u6050\u308c', disgust:'\u5acc\u60aa', surprise:'\u9a5a\u304d', calm:'\u7a4f\u3084\u304b', love:'\u611b\u60c5', anxious:'\u4e0d\u5b89', tired:'\u75b2\u308c', hope:'\u5e0c\u671b', loneliness:'\u5b64\u72ec', gratitude:'\u611f\u8b1d', pride:'\u8a87\u308a', shame:'\u6065\u3058', confused:'\u6df7\u4e71' },
+  wheelEmotions: { joy:'\u3088\u308d\u3053\u3073', fear:'\u6050\u308c', hope:'\u5e0c\u671b', sadness:'\u60b2\u3057\u307f', calmness:'\u7a4f\u3084\u304b\u3055', loneliness:'\u5b64\u72ec', love:'\u611b\u60c5' },
+  moodCaptions: {
+    joy: '\u660e\u308b\u304f\u6674\u308c\u6e21\u3063\u305f\u4e00\u65e5', sadness: '\u7a93\u3092\u4f1d\u3046\u4f0a\u3057\u3044\u96e8\u97f3', anger: '\u713c\u3051\u3064\u304f\u3088\u3046\u306a\u5609\u5929',
+    fear: '\u9698\u3005\u306b\u96a0\u308c\u308b\u5f71', disgust: '\u3082\u3084\u3082\u3084\u3068\u6fc1\u3063\u305f\u7dd1\u8272', surprise: '\u7a7a\u6c17\u306b\u4e88\u671f\u305b\u306c\u4f55\u304b\u304c',
+    calm: '\u9759\u3051\u3055\u3063\u305f\u6c34\u9762\u3068\u3084\u3055\u3057\u3044\u98a8', love: '\u6696\u304b\u304f\u3084\u3055\u3057\u304f\u707d\u308b', anxious: '\u843d\u3061\u7740\u304b\u306a\u304f\u6975\u3080\u707d\u308a',
+    tired: '\u3081\u3057\u3044\u672c\u3068\u306a\u3044\u307b\u3069\u306e\u778e\u3055', hope: '\u5dee\u3057\u8fbc\u3080\u521d\u306e\u5149', loneliness: '\u3069\u3053\u307e\u3067\u3082\u7d9a\u304f\u304c\u3089\u3093\u3068\u3057\u305f\u7a7a',
+    gratitude: '\u3044\u3064\u307e\u3067\u3082\u7d9a\u304f\u9ec4\u91d1\u306e\u6642\u9593', pride: '\u5149\u306e\u4e2d\u3067\u80f8\u3092\u5f35\u308b', shame: '\u534a\u5206\u9589\u3081\u305f\u30ab\u30fc\u30c6\u30f3',
+    confused: '\u6674\u308c\u306a\u3044\u96f2', default: '\u7a93\u3092\u707d\u3059\u305f\u3081\u306b\u6c17\u6301\u3061\u3092\u9078\u3093\u3067\u306d'
+  },
+  comboCaptions: {
+    'anger+sadness+surprise': '\u3057\u3087\u3063\u304f\u3068\u3059\u308b\u3088\u3046\u306a\u51fa\u6765\u4e8b',
+    'fear+sadness+surprise': '\u4e0d\u610f\u3092\u3064\u304b\u308c\u3066\u52d5\u63fa\u3057\u3066\u3044\u308b',
+    'anger+disgust+fear': '\u30a4\u30e9\u30a4\u30e9\u3057\u3066\u3046\u3093\u3056\u308a\u3057\u3066\u3044\u308b',
+    'gratitude+joy+love': '\u5fc3\u304c\u3059\u3063\u304b\u308a\u6e80\u305f\u3055\u308c\u3066\u3044\u308b',
+    'anxious+fear+tired': '\u795e\u7d4c\u304c\u3059\u308a\u5207\u308c\u305d\u3046',
+    'confused+fear+surprise': '\u5b8c\u5168\u306b\u4e0d\u610f\u6253\u3061\u3092\u55b0\u3089\u3063\u305f',
+    'anger+joy': '\u5165\u308a\u4e71\u308c\u305f\u3001\u4e0d\u601d\u8b70\u306a\u6c17\u6301\u3061',
+    'fear+surprise': '\u3073\u304f\u3063\u3068\u3057\u3066\u843d\u3061\u7740\u304b\u306a\u3044',
+    'joy+sadness': '\u3070\u3057\u3068\u3070\u3057\u3055\u306e\u6975\u307f',
+    'anger+sadness': '\u50b7\u3064\u304d\u304c\u3044\u3089\u3060\u3061\u306b\u5909\u308f\u3063\u3066\u3044\u304f',
+    'anxious+calm': '\u4f55\u3068\u304b\u843d\u3061\u7740\u3053\u3046\u3068\u3057\u3066\u3044\u308b',
+    'fear+love': '\u5927\u5207\u306b\u601d\u3046\u304c\u3089\u3082\u5c11\u3057\u6016\u3044',
+    'pride+shame': '\u8a87\u3089\u3057\u3044\u3051\u3069\u3001\u305d\u308c\u3067\u3044\u3044\u306e\u304b\u81ea\u4fe1\u304c\u306a\u3044',
+    'anxious+hope': '\u5e0c\u671b\u306f\u3042\u308b\u3051\u3069\u3001\u5c11\u3057\u4e0d\u5b89',
+    'love+loneliness': '\u5927\u5207\u306a\u4eba\u3092\u6070\u3057\u304f\u601d\u3046',
+    'anger+disgust': '\u3046\u3093\u3056\u308a\u3057\u3066\u30a4\u30e9\u30a4\u30e9\u3059\u308b',
+    'confused+surprise': '\u4f55\u304c\u8d77\u3053\u3063\u305f\u306e\u304b\u3088\u304f\u308f\u304b\u3089\u306a\u3044',
+    'gratitude+sadness': '\u611f\u8b1d\u3057\u3066\u3044\u308b\u3051\u3069\u3001\u4f55\u304b\u3092\u60b2\u3057\u3093\u3067\u3082\u3044\u308b'
+  }
+},
+ru: {
+  subtitle: "маленькое окно в твои чувства",
+  meterLabel: "ЭМОЦИОМЕТР",
+  meterLabelOverload: "ЭМОЦИОМЕТР (ПЕРЕГРУЗКА)",
+  feltTitle: "СЕГОДНЯ Я ЧУВСТВОВАЛ(А)",
+  feltHint: "нажми на каждую эмоцию, которая посетила тебя сегодня",
+  avoidTitle: "Я НЕ ХОТЕЛ(А) ЭТО ЧУВСТВОВАТЬ",
+  avoidHint: "то, что хотелось бы пропустить сегодня",
+  wantTitle: "ХОТЕЛОСЬ БЫ БОЛЬШЕ",
+  wantHint: "что ты надеешься почувствовать сегодня или завтра",
+  noteTitle: "НЕСКОЛЬКО СЛОВ",
+  noteHint: "каким был этот день, своими словами?",
+  notePlaceholder: "сегодня было...",
+  wheelTitle: "КОЛЕСО УДАЧИ",
+  wheelHint: "крути дважды в день — первое вращение выберет к чему стремиться, второе — чего избегать",
+  spinBtn: "КРУТИТЬ",
+  tagSeek: "ИСКАТЬ",
+  tagAvoid: "ИЗБЕГАТЬ",
+  notSpun: "ещё не крутили",
+  saveBtn: "СОХРАНИТЬ",
+  clearBtn: "ОЧИСТИТЬ",
+  pastTitle: "ПРОШЛЫЕ ЗАПИСИ",
+  pastHint: "нажми на светящийся день, чтобы посмотреть чувства",
+  footerNote: "записи хранятся только на этом устройстве",
+  pickFeeling: "выбери чувство, чтобы зажечь окно",
+  rollercoaster: "Ого, целые американские горки эмоций!",
+  spinsLeft: (n)=> `осталось ${n} ${n===1?'вращение':'вращения'} сегодня`,
+  noSpinsLeft: "вращения на сегодня закончились — приходи завтра",
+  pickSomethingFirst: "СНАЧАЛА ВЫБЕРИ ЧТО-НИБУДЬ",
+  pageSaved: "СТРАНИЦА СОХРАНЕНА",
+  modalFelt: "чувства в этот день",
+  modalAvoid: "хотелось избежать",
+  modalWant: "хотелось больше",
+  modalWheel: "колесо удачи",
+  modalNote: "заметка",
+  modalNothing: "здесь ничего не записано",
+  modalNoNote: "заметка не написана",
+  modalWheelEmpty: "колесо не крутили в этот день",
+  modalSeekPrefix: "искать",
+  modalAvoidPrefix: "избегать",
+  months: ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'],
+  weekdays: ['В','П','В','С','Ч','П','С'],
+  emotions: { joy:'радость', sadness:'грусть', anger:'злость', fear:'страх', disgust:'отвращение', surprise:'удивление', calm:'покой', love:'любовь', anxious:'тревога', tired:'усталость', hope:'надежда', loneliness:'одиночество', gratitude:'благодарность', pride:'гордость', shame:'стыд', confused:'растерянность' },
+  wheelEmotions: { joy:'радость', fear:'страх', hope:'надежда', sadness:'грусть', calmness:'покой', loneliness:'одиночество', love:'любовь' },
+  moodCaptions: {
+    joy: 'яркий, солнечный денёк', sadness: 'тихий дождь по стеклу', anger: 'горячее, грозовое небо',
+    fear: 'тени по углам', disgust: 'мутная, тревожная зелень', surprise: 'что-то неожиданное в воздухе',
+    calm: 'спокойная вода, тихий ветерок', love: 'тёплое и сияющее', anxious: 'беспокойный, мерцающий огонёк',
+    tired: 'тускло и сонно', hope: 'первый пробивающийся луч', loneliness: 'бескрайнее, пустое небо',
+    gratitude: 'затянувшийся золотой час', pride: 'гордо стоишь в лучах света', shame: 'наполовину задернутые шторы',
+    confused: 'облака, которые никак не рассеются', default: 'выбери чувство, чтобы зажечь окно'
+  },
+  comboCaptions: {
+    'anger+sadness+surprise': 'шокирующее событие',
+    'fear+sadness+surprise': 'врасплох и в смятении',
+    'anger+disgust+fear': 'на взводе и сыт по горло',
+    'gratitude+joy+love': 'сердце переполнено теплом',
+    'anxious+fear+tired': 'нервы на пределе',
+    'confused+fear+surprise': 'застигнут(а) врасплох',
+    'anger+joy': 'смесь противоречивых чувств',
+    'fear+surprise': 'испуг и тревога',
+    'joy+sadness': 'горько-сладкая грусть',
+    'anger+sadness': 'обида перерастает в злость',
+    'anxious+calm': 'попытка сохранять спокойствие',
+    'fear+love': 'любишь, но немного боишься',
+    'pride+shame': 'гордишься, но сомневаешься',
+    'anxious+hope': 'с надеждой, но с волнением',
+    'love+loneliness': 'тоска по дорогому человеку',
+    'anger+disgust': 'раздражение и отвращение',
+    'confused+surprise': 'непонятно, что только что произошло',
+    'gratitude+sadness': 'благодарность сквозь светлую печаль'
+  }
+}
+};
+let currentLang = 'en';
+function t(key){
+  const v = I18N[currentLang][key];
+  return v !== undefined ? v : I18N.en[key];
+}
+function tEmotion(key){
+  return (I18N[currentLang].emotions && I18N[currentLang].emotions[key]) || I18N.en.emotions[key] || key;
+}
+function tWheelEmotion(key){
+  return (I18N[currentLang].wheelEmotions && I18N[currentLang].wheelEmotions[key]) || I18N.en.wheelEmotions[key] || key;
+}
+
+/* ---------------- Pixel icon library (16x16 grid, drawn as inline SVG rects) ---------------- */
+const ICONS = {
+  joy:      { color:'#f2c14e', shape:[[6,2],[9,2],[5,3],[10,3],[4,4],[11,4],[4,5],[6,5],[9,5],[11,5],[4,6],[11,6],[3,7],[12,7],[3,8],[12,8],[4,9],[11,9],[5,10],[10,10],[6,11],[9,11],[7,12],[8,12],[6,6,'eye'],[9,6,'eye'],[6,7,'eye'],[9,7,'eye']] },
+  sadness:  { color:'#7fa7d9', shape:'sad' },
+  anger:    { color:'#d9614f', shape:'anger' },
+  fear:     { color:'#a98fd2', shape:'fear' },
+  disgust:  { color:'#8fbf6f', shape:'disgust' },
+  surprise: { color:'#e8a5c4', shape:'surprise' },
+  calm:     { color:'#8fd4c1', shape:'calm' },
+  love:     { color:'#e8607f', shape:'love' },
+  anxious:  { color:'#d9a441', shape:'anxious' },
+  tired:    { color:'#9c8fbf', shape:'tired' },
+  hope:     { color:'#f2d16b', shape:'hope' },
+  loneliness:{color:'#6b7fa8', shape:'lonely' },
+  gratitude:{ color:'#e0a55f', shape:'grateful' },
+  pride:    { color:'#d9944f', shape:'pride' },
+  shame:    { color:'#8a6f8f', shape:'shame' },
+  confused: { color:'#b98fd2', shape:'confused' }
+};
+
+/* Build a simple pixel face SVG per emotion using a compact rule set so we don't hand-list every pixel */
+function facePixelSVG(key, size){
+  const c = ICONS[key].color;
+  size = size || 32;
+  // Base 16x16 face: circle-ish outline (shared) + mouth/eyes vary by expression group
+  const outline = [
+    [6,2],[7,2],[8,2],[9,2],
+    [4,3],[5,3],[10,3],[11,3],
+    [3,4],[12,4],
+    [2,5],[13,5],
+    [2,6],[13,6],
+    [2,7],[13,7],
+    [2,8],[13,8],
+    [2,9],[13,9],
+    [3,10],[12,10],
+    [4,11],[5,11],[10,11],[11,11],
+    [6,12],[7,12],[8,12],[9,12]
+  ];
+  const fillPx = [];
+  for(let y=3;y<=11;y++){
+    for(let x=3;x<=12;x++){
+      fillPx.push([x,y]);
+    }
+  }
+  let features = [];
+  const dark = 'rgba(0,0,0,0.55)';
+  switch(key){
+    case 'joy':
+      features = [[6,6],[6,7],[9,6],[9,7], [5,9],[6,10],[7,10],[8,10],[9,10],[10,9]];
+      break;
+    case 'sadness':
+      features = [[6,7],[9,7],[5,10],[6,9],[9,9],[10,10]];
+      break;
+    case 'anger':
+      features = [[5,5],[6,6],[9,6],[10,5],[6,7],[9,7],[6,10],[7,9],[8,9],[9,10]];
+      break;
+    case 'fear':
+      features = [[6,6],[6,7],[9,6],[9,7],[7,10],[8,10],[6,9],[9,9]];
+      break;
+    case 'disgust':
+      features = [[6,7],[9,6],[5,10],[6,10],[7,9],[9,10],[10,10]];
+      break;
+    case 'surprise':
+      features = [[6,6],[6,7],[9,6],[9,7],[7,9],[8,9],[7,10],[8,10]];
+      break;
+    case 'calm':
+      features = [[5,7],[6,7],[9,7],[10,7],[6,9],[7,10],[8,10],[9,9]];
+      break;
+    case 'love':
+      features = [[5,6],[6,7],[9,6],[10,7],[6,10],[7,9],[8,9],[9,10]];
+      break;
+    case 'anxious':
+      features = [[6,6],[6,7],[9,6],[9,7],[6,10],[7,9],[8,10],[9,9]];
+      break;
+    case 'tired':
+      features = [[5,7],[6,7],[9,7],[10,7],[6,10],[7,10],[8,10],[9,10]];
+      break;
+    case 'hope':
+      features = [[6,6],[6,7],[9,6],[9,7],[6,9],[7,10],[8,10],[9,9]];
+      break;
+    case 'loneliness':
+      features = [[6,7],[9,7],[6,10],[7,10],[8,9],[9,9]];
+      break;
+    case 'gratitude':
+      features = [[5,7],[6,6],[9,6],[10,7],[6,9],[7,10],[8,10],[9,9]];
+      break;
+    case 'pride':
+      features = [[5,6],[6,7],[9,7],[10,6],[6,10],[7,9],[8,9],[9,10]];
+      break;
+    case 'shame':
+      features = [[6,8],[9,8],[6,10],[7,9],[8,9],[9,10]];
+      break;
+    case 'confused':
+      features = [[6,7],[9,6],[6,10],[7,9],[8,10],[9,9]];
+      break;
+    default:
+      features = [];
+  }
+  const rects = fillPx.map(p=>`<rect x="${p[0]}" y="${p[1]}" width="1" height="1" fill="${c}"/>`).join('');
+  const outlineRects = outline.map(p=>`<rect x="${p[0]}" y="${p[1]}" width="1" height="1" fill="${c}"/>`).join('');
+  const featureRects = features.map(p=>`<rect x="${p[0]}" y="${p[1]}" width="1" height="1" fill="${dark}"/>`).join('');
+  return `<svg viewBox="0 0 16 16" width="${size}" height="${size}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">${outlineRects}${rects}${featureRects}</svg>`;
+}
+
+function heartSVG(filled){
+  const fill = filled ? '#e8607f' : 'transparent';
+  const outline = '#f4ead8';
+  return `<svg viewBox="0 0 16 14" width="20" height="18" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
+    <rect x="2" y="2" width="3" height="1" fill="${outline}"/><rect x="11" y="2" width="3" height="1" fill="${outline}"/>
+    <rect x="1" y="3" width="1" height="1" fill="${outline}"/><rect x="5" y="3" width="1" height="1" fill="${outline}"/>
+    <rect x="10" y="3" width="1" height="1" fill="${outline}"/><rect x="14" y="3" width="1" height="1" fill="${outline}"/>
+    <rect x="0" y="4" width="1" height="3" fill="${outline}"/><rect x="6" y="3" width="4" height="1" fill="${outline}"/>
+    <rect x="15" y="4" width="1" height="3" fill="${outline}"/>
+    <rect x="1" y="7" width="1" height="1" fill="${outline}"/><rect x="14" y="7" width="1" height="1" fill="${outline}"/>
+    <rect x="2" y="8" width="1" height="1" fill="${outline}"/><rect x="13" y="8" width="1" height="1" fill="${outline}"/>
+    <rect x="3" y="9" width="1" height="1" fill="${outline}"/><rect x="12" y="9" width="1" height="1" fill="${outline}"/>
+    <rect x="4" y="10" width="1" height="1" fill="${outline}"/><rect x="11" y="10" width="1" height="1" fill="${outline}"/>
+    <rect x="5" y="11" width="1" height="1" fill="${outline}"/><rect x="10" y="11" width="1" height="1" fill="${outline}"/>
+    <rect x="6" y="12" width="1" height="1" fill="${outline}"/><rect x="9" y="12" width="1" height="1" fill="${outline}"/>
+    <rect x="7" y="13" width="2" height="1" fill="${outline}"/>
+    <rect x="2" y="4" width="3" height="4" fill="${fill}"/><rect x="5" y="4" width="1" height="3" fill="${fill}"/>
+    <rect x="6" y="4" width="4" height="3" fill="${fill}"/><rect x="10" y="4" width="1" height="3" fill="${fill}"/>
+    <rect x="11" y="4" width="3" height="4" fill="${fill}"/>
+    <rect x="2" y="8" width="11" height="1" fill="${fill}"/>
+    <rect x="3" y="9" width="9" height="1" fill="${fill}"/>
+    <rect x="4" y="10" width="7" height="1" fill="${fill}"/>
+    <rect x="5" y="11" width="5" height="1" fill="${fill}"/>
+    <rect x="6" y="12" width="3" height="1" fill="${fill}"/>
+  </svg>`;
+}
+
+const EMOTIONS = [
+  {key:'joy', label:'joy'},
+  {key:'sadness', label:'sadness'},
+  {key:'anger', label:'anger'},
+  {key:'fear', label:'fear'},
+  {key:'disgust', label:'disgust'},
+  {key:'surprise', label:'surprise'},
+  {key:'calm', label:'calm'},
+  {key:'love', label:'love'},
+  {key:'anxious', label:'anxious'},
+  {key:'tired', label:'tired'},
+  {key:'hope', label:'hope'},
+  {key:'loneliness', label:'lonely'},
+  {key:'gratitude', label:'grateful'},
+  {key:'pride', label:'pride'},
+  {key:'shame', label:'shame'},
+  {key:'confused', label:'confused'}
+];
+
+/* ---------------- State ---------------- */
+const state = {
+  felt: {},      // key -> intensity 1-5
+  avoid: new Set(),
+  want: new Set(),
+  note: ''
+};
+
+/* ---------------- Render emotion grids ---------------- */
+function buildGrid(containerId, mode){
+  const grid = document.getElementById(containerId);
+  EMOTIONS.forEach(e=>{
+    const tile = document.createElement('div');
+    tile.className = 'emo-tile';
+    tile.dataset.key = e.key;
+    tile.dataset.mode = mode;
+    tile.innerHTML = `<div class="icon">${facePixelSVG(e.key,32)}</div><div class="label" data-emo-label="${e.key}">${tEmotion(e.key)}</div>`;
+    tile.addEventListener('click', ()=> toggleEmotion(mode, e.key, tile));
+    grid.appendChild(tile);
+  });
+}
+buildGrid('feltGrid','felt');
+buildGrid('avoidGrid','avoid');
+buildGrid('wantGrid','want');
+
+function toggleEmotion(mode, key, tile){
+  if(mode === 'felt'){
+    if(state.felt[key] !== undefined){
+      delete state.felt[key];
+      tile.classList.remove('selected');
+    } else {
+      state.felt[key] = 3;
+      tile.classList.add('selected');
+    }
+    renderIntensity();
+  } else {
+    const set = state[mode];
+    if(set.has(key)){
+      set.delete(key);
+      tile.classList.remove('selected');
+    } else {
+      set.add(key);
+      tile.classList.add('selected');
+    }
+  }
+  updateMoodWindow();
+}
+
+/* ---------------- Intensity hearts for "felt" emotions ---------------- */
+function renderIntensity(){
+  const block = document.getElementById('feltIntensity');
+  const rows = document.getElementById('feltIntensityRows');
+  const keys = Object.keys(state.felt);
+  rows.innerHTML = '';
+  if(keys.length === 0){
+    block.classList.remove('show');
+    return;
+  }
+  block.classList.add('show');
+  keys.forEach(key=>{
+    const row = document.createElement('div');
+    row.className = 'intensity-row';
+    const heartsHtml = [1,2,3,4,5].map(i=>{
+      const filled = i <= state.felt[key];
+      return `<span class="heart-btn" data-key="${key}" data-val="${i}">${heartSVG(filled)}</span>`;
+    }).join('');
+    row.innerHTML = `<div class="emo-name"><span class="mini-icon">${facePixelSVG(key,18)}</span>${tEmotion(key)}</div><div class="hearts">${heartsHtml}</div>`;
+    rows.appendChild(row);
+  });
+  rows.querySelectorAll('.heart-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.felt[btn.dataset.key] = parseInt(btn.dataset.val,10);
+      renderIntensity();
+    });
+  });
+}
+
+/* ---------------- Emotion combos ---------------- */
+/* Keys are sorted, plus-joined emotion keys. 3-way combos checked before 2-way. */
+const COMBOS_3 = [
+  { keys:['anger','sadness','surprise'], top:'#8a5a3d', bottom:'#4a2f1f', caption:'a shocking event', pulse:true },
+  { keys:['fear','sadness','surprise'], top:'#4a4a7a', bottom:'#26264a', caption:'blindsided and shaken', pulse:true },
+  { keys:['anger','disgust','fear'], top:'#6b3d3d', bottom:'#3a1f1f', caption:'on edge and fed up', pulse:true },
+  { keys:['joy','love','gratitude'], top:'#f2a35e', bottom:'#e8607f', caption:'heart completely full', pulse:false },
+  { keys:['anxious','fear','tired'], top:'#4a3d5c', bottom:'#241f38', caption:'running on empty nerves', pulse:true },
+  { keys:['confused','fear','surprise'], top:'#6b5a9e', bottom:'#3a2f5c', caption:'caught completely off guard', pulse:true }
+];
+const COMBOS_2 = [
+  { keys:['anger','joy'], top:'#e8b04e', bottom:'#b8503e', caption:'a confusing mix of feelings', split:true },
+  { keys:['fear','surprise'], top:'#3d3160', bottom:'#a85f95', caption:'startled and unsettled', split:true },
+  { keys:['joy','sadness'], top:'#f7cf70', bottom:'#3d4a6b', caption:'bittersweet, in every sense', split:true },
+  { keys:['anger','sadness'], top:'#7a2f22', bottom:'#3d4a6b', caption:'hurt turning into frustration', split:true },
+  { keys:['calm','anxious'], top:'#7fc9b8', bottom:'#8a672a', caption:'trying to stay steady', split:true },
+  { keys:['love','fear'], top:'#e8607f', bottom:'#221a3d', caption:'caring, but a little afraid', split:true },
+  { keys:['pride','shame'], top:'#d9944f', bottom:'#382c40', caption:'proud, but not sure you should be', split:true },
+  { keys:['hope','anxious'], top:'#f2d16b', bottom:'#8a672a', caption:'hopeful, if a little nervous', split:true },
+  { keys:['loneliness','love'], top:'#4a5578', bottom:'#e8607f', caption:'missing someone you care about', split:true },
+  { keys:['disgust','anger'], top:'#5f7a4a', bottom:'#7a2f22', caption:'fed up and frustrated', split:true },
+  { keys:['confused','surprise'], top:'#8a6fb0', bottom:'#a85f95', caption:'not sure what just happened', split:true },
+  { keys:['gratitude','sadness'], top:'#e0a55f', bottom:'#3d4a6b', caption:'grateful, but grieving something', split:true }
+];
+function comboKey(keys){ return [...keys].sort().join('+'); }
+const COMBO_MAP_3 = {};
+COMBOS_3.forEach(c=> COMBO_MAP_3[comboKey(c.keys)] = c);
+const COMBO_MAP_2 = {};
+COMBOS_2.forEach(c=> COMBO_MAP_2[comboKey(c.keys)] = c);
+
+function findCombo(feltKeys){
+  const set = new Set(feltKeys);
+  if(feltKeys.length >= 3){
+    for(const c of COMBOS_3){
+      if(c.keys.every(k=> set.has(k))) return c;
+    }
+  }
+  if(feltKeys.length >= 2){
+    for(const c of COMBOS_2){
+      if(c.keys.every(k=> set.has(k))) return c;
+    }
+  }
+  return null;
+}
+
+/* ---------------- Signature mood window ---------------- */
+const MOOD_SKIES = {
+  joy: {top:'#f7cf70', bottom:'#f2a35e', caption:'a bright, sunny sort of day'},
+  sadness: {top:'#5b6f9e', bottom:'#3d4a6b', caption:'soft rain against the glass'},
+  anger: {top:'#b8503e', bottom:'#7a2f22', caption:'a hot, stormy sky'},
+  fear: {top:'#3d3160', bottom:'#221a3d', caption:'shadows in the corners'},
+  disgust: {top:'#5f7a4a', bottom:'#3d5230', caption:'a murky, uneasy green'},
+  surprise: {top:'#d98fc4', bottom:'#a85f95', caption:'something unexpected in the air'},
+  calm: {top:'#7fc9b8', bottom:'#4f9d8a', caption:'still water, quiet breeze'},
+  love: {top:'#e8607f', bottom:'#b83e5c', caption:'warm and glowing'},
+  anxious: {top:'#c99a3d', bottom:'#8a672a', caption:'a restless, flickering light'},
+  tired: {top:'#6b6390', bottom:'#443c66', caption:'dim and drowsy'},
+  hope: {top:'#f2d16b', bottom:'#c9a545', caption:'first light breaking through'},
+  loneliness: {top:'#4a5578', bottom:'#2b3350', caption:'a wide, empty sky'},
+  gratitude: {top:'#e0a55f', bottom:'#b57838', caption:'golden hour, lingering'},
+  pride: {top:'#d9944f', bottom:'#a86530', caption:'standing tall in the light'},
+  shame: {top:'#5a4763', bottom:'#382c40', caption:'curtains half drawn'},
+  confused: {top:'#8a6fb0', bottom:'#5c4780', caption:'clouds that won\'t settle'},
+  default: {top:'#3d3460', bottom:'#241f38', caption:'pick a feeling to light the window'}
+};
+
+function updateEmotiometer(count){
+  const body = document.getElementById('meterBody');
+  const fill = document.getElementById('meterFill');
+  const countLabel = document.getElementById('meterCount');
+  const label = document.getElementById('meterLabel');
+
+  countLabel.textContent = `${count} / ${EMOTIONS.length}`;
+  body.classList.remove('broken','rgb-mode');
+  fill.classList.remove('warn','danger');
+  label.classList.remove('danger-label');
+  label.textContent = t('meterLabel');
+
+  if(count === EMOTIONS.length){
+    body.classList.add('rgb-mode');
+    label.classList.add('danger-label');
+    label.textContent = t('meterLabel');
+    return;
+  }
+
+  const pct = Math.min(count / EMOTIONS.length, 1) * 100;
+  fill.style.height = pct + '%';
+
+  if(count > 6){
+    body.classList.add('broken');
+    fill.classList.add('danger');
+    label.classList.add('danger-label');
+    label.textContent = t('meterLabelOverload');
+  } else if(count >= 4){
+    fill.classList.add('warn');
+  }
+}
+
+function updateMoodWindow(){
+  const windowEl = document.getElementById('moodWindow');
+  const sky = document.getElementById('moodSky');
+  const caption = document.getElementById('moodCaption');
+  const keys = Object.keys(state.felt);
+
+  updateEmotiometer(keys.length);
+
+  windowEl.classList.remove('rollercoaster');
+  caption.classList.remove('rollercoaster');
+  sky.classList.remove('split','pulse');
+  sky.style.setProperty('--split-top','');
+  sky.style.setProperty('--split-bottom','');
+
+  if(keys.length === EMOTIONS.length){
+    windowEl.classList.add('rollercoaster');
+    caption.classList.add('rollercoaster');
+    sky.style.background = '';
+    caption.textContent = t('rollercoaster');
+    return;
+  }
+
+  const combo = findCombo(keys);
+  if(combo){
+    if(combo.split){
+      sky.classList.add('split');
+      sky.style.background = combo.bottom;
+      const styleTag = document.getElementById('splitDynamicStyle') || (()=>{
+        const s = document.createElement('style');
+        s.id = 'splitDynamicStyle';
+        document.head.appendChild(s);
+        return s;
+      })();
+      styleTag.textContent = `.mood-window .sky.split::before{ background:${combo.top}; } .mood-window .sky.split::after{ background:${combo.bottom}; }`;
+    } else {
+      sky.style.background = `linear-gradient(${combo.top}, ${combo.bottom})`;
+    }
+    if(combo.pulse) sky.classList.add('pulse');
+    caption.textContent = t('comboCaptions')[comboKey(combo.keys)] || combo.caption;
+    return;
+  }
+
+  let dominant = 'default';
+  if(keys.length){
+    dominant = keys.reduce((a,b)=> state.felt[a] >= state.felt[b] ? a : b);
+  }
+  const m = MOOD_SKIES[dominant];
+  sky.style.background = `linear-gradient(${m.top}, ${m.bottom})`;
+  caption.textContent = t('moodCaptions')[dominant] || m.caption;
+}
+updateMoodWindow();
+
+
+/* ---------------- Diary textarea ---------------- */
+const diaryText = document.getElementById('diaryText');
+const charCount = document.getElementById('charCount');
+diaryText.addEventListener('input', ()=>{
+  charCount.textContent = diaryText.value.length;
+});
+
+/* ---------------- Storage ---------------- */
+async function loadHistory(){
+  try{
+    const result = await window.storage.get('emotio:entries');
+    return result ? JSON.parse(result.value) : [];
+  } catch(e){
+    return [];
+  }
+}
+async function saveHistory(entries){
+  try{
+    await window.storage.set('emotio:entries', JSON.stringify(entries));
+  } catch(e){
+    console.error('save failed', e);
+  }
+}
+
+function todayKey(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+function formatDate(key){
+  const d = new Date(key + 'T00:00:00');
+  return d.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'});
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+/* ---------------- Calendar ---------------- */
+let calViewDate = new Date();
+calViewDate.setDate(1);
+let entriesCache = [];
+
+function renderWeekdays(){
+  const el = document.getElementById('calWeekdays');
+  el.innerHTML = t('weekdays').map(w=> `<span>${w}</span>`).join('');
+}
+
+function dateKey(y,m,d){
+  return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+async function refreshAndRenderCalendar(){
+  entriesCache = await loadHistory();
+  renderCalendar();
+}
+
+function renderCalendar(){
+  const entryMap = {};
+  entriesCache.forEach(e=> entryMap[e.date] = e);
+
+  const y = calViewDate.getFullYear();
+  const m = calViewDate.getMonth();
+  document.getElementById('calMonthLabel').textContent = `${t('months')[m].toUpperCase()} ${y}`;
+
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+
+  const firstDay = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const todayStr = todayKey();
+
+  for(let i=0;i<firstDay;i++){
+    const empty = document.createElement('div');
+    empty.className = 'cal-cell empty';
+    grid.appendChild(empty);
+  }
+
+  for(let d=1; d<=daysInMonth; d++){
+    const key = dateKey(y,m,d);
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell';
+    if(key === todayStr) cell.classList.add('today');
+
+    const entry = entryMap[key];
+    if(entry){
+      cell.classList.add('has-entry');
+      const feltKeys = Object.keys(entry.felt||{});
+      let dotColor = 'var(--gold)';
+      if(feltKeys.length){
+        const dominant = feltKeys.reduce((a,b)=> entry.felt[a] >= entry.felt[b] ? a : b);
+        dotColor = ICONS[dominant] ? ICONS[dominant].color : 'var(--gold)';
+      }
+      cell.innerHTML = `<span>${d}</span><span class="dot" style="background:${dotColor}"></span>`;
+      cell.addEventListener('click', ()=> openDayModal(entry));
+    } else {
+      cell.innerHTML = `<span>${d}</span>`;
+    }
+    grid.appendChild(cell);
+  }
+}
+
+document.getElementById('calPrev').addEventListener('click', ()=>{
+  calViewDate.setMonth(calViewDate.getMonth()-1);
+  renderCalendar();
+});
+document.getElementById('calNext').addEventListener('click', ()=>{
+  calViewDate.setMonth(calViewDate.getMonth()+1);
+  renderCalendar();
+});
+
+/* ---------------- Day detail modal ---------------- */
+function openDayModal(entry){
+  document.getElementById('modalDate').textContent = formatDate(entry.date).toUpperCase();
+  const body = document.getElementById('modalBody');
+
+  const feltKeys = Object.keys(entry.felt||{});
+  const feltHtml = feltKeys.length ? `<div class="modal-emo-list">${feltKeys.map(k=>{
+    const label = tEmotion(k);
+    const iconUri = `data:image/svg+xml;utf8,${encodeURIComponent(facePixelSVG(k,18))}`;
+    const heartsUri = [1,2,3,4,5].map(i=> `data:image/svg+xml;utf8,${encodeURIComponent(heartSVG(i<=entry.felt[k]))}`);
+    const heartsHtml = heartsUri.map(u=>`<img src="${u}" alt=""/>`).join('');
+    return `<span class="modal-emo-chip"><img src="${iconUri}" alt="${label}"/>${label}<span class="chip-hearts">${heartsHtml}</span></span>`;
+  }).join('')}</div>` : `<p class="modal-empty">${t('modalNothing')}</p>`;
+
+  const avoidHtml = (entry.avoid||[]).length ? `<div class="modal-emo-list">${entry.avoid.map(k=>{
+    const label = tEmotion(k);
+    const iconUri = `data:image/svg+xml;utf8,${encodeURIComponent(facePixelSVG(k,18))}`;
+    return `<span class="modal-emo-chip"><img src="${iconUri}" alt="${label}"/>${label}</span>`;
+  }).join('')}</div>` : `<p class="modal-empty">${t('modalNothing')}</p>`;
+
+  const wantHtml = (entry.want||[]).length ? `<div class="modal-emo-list">${entry.want.map(k=>{
+    const label = tEmotion(k);
+    const iconUri = `data:image/svg+xml;utf8,${encodeURIComponent(facePixelSVG(k,18))}`;
+    return `<span class="modal-emo-chip"><img src="${iconUri}" alt="${label}"/>${label}</span>`;
+  }).join('')}</div>` : `<p class="modal-empty">${t('modalNothing')}</p>`;
+
+  const noteHtml = entry.note ? `<div class="modal-note">${escapeHtml(entry.note)}</div>` : `<p class="modal-empty">${t('modalNoNote')}</p>`;
+
+  const wheelLabel = (w)=> w.key ? tWheelEmotion(w.key) : w.label;
+  const wheelHtml = (entry.wheelSeek || entry.wheelAvoid) ? `<div class="modal-emo-list">
+      ${entry.wheelSeek ? `<span class="modal-emo-chip"><span class="emoji">${entry.wheelSeek.emoji}</span>${t('modalSeekPrefix')}: ${wheelLabel(entry.wheelSeek)}</span>` : ''}
+      ${entry.wheelAvoid ? `<span class="modal-emo-chip"><span class="emoji">${entry.wheelAvoid.emoji}</span>${t('modalAvoidPrefix')}: ${wheelLabel(entry.wheelAvoid)}</span>` : ''}
+    </div>` : `<p class="modal-empty">${t('modalWheelEmpty')}</p>`;
+
+  body.innerHTML = `
+    <div class="modal-section">
+      <p class="modal-section-label">${t('modalFelt')}</p>
+      ${feltHtml}
+    </div>
+    <div class="modal-section">
+      <p class="modal-section-label">${t('modalAvoid')}</p>
+      ${avoidHtml}
+    </div>
+    <div class="modal-section">
+      <p class="modal-section-label">${t('modalWant')}</p>
+      ${wantHtml}
+    </div>
+    <div class="modal-section">
+      <p class="modal-section-label">${t('modalWheel')}</p>
+      ${wheelHtml}
+    </div>
+    <div class="modal-section">
+      <p class="modal-section-label">${t('modalNote')}</p>
+      ${noteHtml}
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+  currentModalEntry = entry;
+}
+let currentModalEntry = null;
+function closeDayModal(){
+  document.getElementById('modalOverlay').classList.remove('show');
+  currentModalEntry = null;
+}
+document.getElementById('modalClose').addEventListener('click', closeDayModal);
+document.getElementById('modalOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'modalOverlay') closeDayModal();
+});
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape') closeDayModal();
+});
+
+/* ---------------- Save / clear ---------------- */
+function showToast(msg){
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(()=> toast.classList.remove('show'), 1800);
+}
+
+document.getElementById('saveBtn').addEventListener('click', async ()=>{
+  const entry = {
+    date: todayKey(),
+    felt: {...state.felt},
+    avoid: Array.from(state.avoid),
+    want: Array.from(state.want),
+    note: diaryText.value.trim(),
+    wheelSeek: wheelState.seek,
+    wheelAvoid: wheelState.avoid
+  };
+  const hasContent = Object.keys(entry.felt).length || entry.avoid.length || entry.want.length || entry.note || entry.wheelSeek || entry.wheelAvoid;
+  if(!hasContent){
+    showToast(t('pickSomethingFirst'));
+    return;
+  }
+  const entries = await loadHistory();
+  const idx = entries.findIndex(e=> e.date === entry.date);
+  if(idx >= 0) entries[idx] = entry; else entries.push(entry);
+  await saveHistory(entries);
+  showToast(t('pageSaved'));
+  await refreshAndRenderCalendar();
+});
+
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  state.felt = {};
+  state.avoid.clear();
+  state.want.clear();
+  diaryText.value = '';
+  charCount.textContent = '0';
+  document.querySelectorAll('.emo-tile').forEach(t=> t.classList.remove('selected'));
+  renderIntensity();
+  updateMoodWindow();
+});
+
+/* ---------------- Luckwheel ---------------- */
+const WHEEL_EMOTIONS = [
+  { key:'joy', label:'joy', emoji:'\u{1F600}', color:'#f2c14e' },
+  { key:'fear', label:'fear', emoji:'\u{1F631}', color:'#a98fd2' },
+  { key:'hope', label:'hope', emoji:'\u{1F31F}', color:'#f2d16b' },
+  { key:'sadness', label:'sadness', emoji:'\u{1F622}', color:'#7fa7d9' },
+  { key:'calmness', label:'calmness', emoji:'\u{1F60C}', color:'#8fd4c1' },
+  { key:'loneliness', label:'loneliness', emoji:'\u{1F636}', color:'#6b7fa8' },
+  { key:'love', label:'love', emoji:'\u{2764}\u{FE0F}', color:'#e8607f' }
+];
+
+const wheelState = {
+  spinsUsed: 0,
+  seek: null,
+  avoid: null,
+  currentRotation: 0
+};
+
+function buildWheelSVG(){
+  const svg = document.getElementById('wheelSvg');
+  const n = WHEEL_EMOTIONS.length;
+  const cx = 110, cy = 110, r = 108;
+  const slice = (2*Math.PI) / n;
+  let html = '';
+  WHEEL_EMOTIONS.forEach((e, i)=>{
+    const start = -Math.PI/2 + i*slice;
+    const end = start + slice;
+    const x1 = cx + r*Math.cos(start), y1 = cy + r*Math.sin(start);
+    const x2 = cx + r*Math.cos(end), y2 = cy + r*Math.sin(end);
+    const largeArc = slice > Math.PI ? 1 : 0;
+    html += `<path d="M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${largeArc} 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z" fill="${e.color}" stroke="#2b2440" stroke-width="2"/>`;
+
+    const mid = start + slice/2;
+    const tx = cx + (r*0.62)*Math.cos(mid);
+    const ty = cy + (r*0.62)*Math.sin(mid);
+    const rotDeg = (mid*180/Math.PI) + 90;
+    html += `<g transform="translate(${tx.toFixed(2)},${ty.toFixed(2)}) rotate(${rotDeg.toFixed(2)})">
+      <text x="0" y="-6" text-anchor="middle" font-size="16">${e.emoji}</text>
+      <text x="0" y="12" text-anchor="middle" font-size="11" fill="#2b2440">${tWheelEmotion(e.key)}</text>
+    </g>`;
+  });
+  svg.innerHTML = html;
+}
+buildWheelSVG();
+
+function wheelAngleForIndex(i){
+  const n = WHEEL_EMOTIONS.length;
+  const slice = 360 / n;
+  return i * slice + slice/2;
+}
+
+function updateWheelUI(){
+  const status = document.getElementById('wheelStatus');
+  const spinBtn = document.getElementById('spinBtn');
+  const seekChip = document.getElementById('seekChip');
+  const avoidChip = document.getElementById('avoidChip');
+
+  const left = 2 - wheelState.spinsUsed;
+  if(left > 0){
+    status.textContent = t('spinsLeft')(left);
+    spinBtn.disabled = false;
+  } else {
+    status.textContent = t('noSpinsLeft');
+    spinBtn.disabled = true;
+  }
+
+  if(wheelState.seek){
+    seekChip.classList.remove('pending');
+    seekChip.innerHTML = `<span class="tag">${t('tagSeek')}</span><span class="emoji">${wheelState.seek.emoji}</span><span>${tWheelEmotion(wheelState.seek.key)}</span>`;
+  } else {
+    seekChip.classList.add('pending');
+    seekChip.innerHTML = `<span class="tag">${t('tagSeek')}</span><span>${t('notSpun')}</span>`;
+  }
+  if(wheelState.avoid){
+    avoidChip.classList.remove('pending');
+    avoidChip.innerHTML = `<span class="tag">${t('tagAvoid')}</span><span class="emoji">${wheelState.avoid.emoji}</span><span>${tWheelEmotion(wheelState.avoid.key)}</span>`;
+  } else {
+    avoidChip.classList.add('pending');
+    avoidChip.innerHTML = `<span class="tag">${t('tagAvoid')}</span><span>${t('notSpun')}</span>`;
+  }
+}
+
+async function loadWheelState(){
+  try{
+    const result = await window.storage.get('emotio:wheel:' + todayKey());
+    return result ? JSON.parse(result.value) : null;
+  } catch(e){
+    return null;
+  }
+}
+async function saveWheelState(){
+  try{
+    await window.storage.set('emotio:wheel:' + todayKey(), JSON.stringify({
+      spinsUsed: wheelState.spinsUsed,
+      seek: wheelState.seek,
+      avoid: wheelState.avoid,
+      currentRotation: wheelState.currentRotation
+    }));
+  } catch(e){
+    console.error('wheel save failed', e);
+  }
+}
+
+async function syncWheelIntoTodayEntry(){
+  const entries = await loadHistory();
+  const key = todayKey();
+  const idx = entries.findIndex(e=> e.date === key);
+  if(idx >= 0){
+    entries[idx].wheelSeek = wheelState.seek;
+    entries[idx].wheelAvoid = wheelState.avoid;
+  } else {
+    entries.push({
+      date: key,
+      felt: {},
+      avoid: [],
+      want: [],
+      note: '',
+      wheelSeek: wheelState.seek,
+      wheelAvoid: wheelState.avoid
+    });
+  }
+  await saveHistory(entries);
+  await refreshAndRenderCalendar();
+}
+
+function spinWheel(){
+  if(wheelState.spinsUsed >= 2) return;
+  const spinBtn = document.getElementById('spinBtn');
+  spinBtn.disabled = true;
+
+  const n = WHEEL_EMOTIONS.length;
+  const winnerIndex = Math.floor(Math.random() * n);
+  const targetAngle = 360 - wheelAngleForIndex(winnerIndex);
+  const extraSpins = 4 + Math.floor(Math.random()*2);
+  const finalRotation = wheelState.currentRotation + extraSpins*360 + ((targetAngle - (wheelState.currentRotation % 360)) + 360) % 360;
+
+  const svg = document.getElementById('wheelSvg');
+  svg.style.transform = `rotate(${finalRotation}deg)`;
+  wheelState.currentRotation = finalRotation;
+
+  setTimeout(async ()=>{
+    const winner = WHEEL_EMOTIONS[winnerIndex];
+    wheelState.spinsUsed += 1;
+    if(wheelState.spinsUsed === 1){
+      wheelState.seek = winner;
+    } else {
+      wheelState.avoid = winner;
+    }
+    await saveWheelState();
+    await syncWheelIntoTodayEntry();
+    updateWheelUI();
+  }, 3300);
+}
+document.getElementById('spinBtn').addEventListener('click', spinWheel);
+
+/* ---------------- Language switching ---------------- */
+const LANG_CODES = { en:'EN', tr:'TR', ja:'JA', ru:'RU' };
+
+function applyStaticI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.dataset.i18n;
+    const val = t(key);
+    if(typeof val === 'string') el.textContent = val;
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+}
+
+function applyLanguage(lang){
+  currentLang = I18N[lang] ? lang : 'en';
+
+  document.getElementById('langBtnFlag').textContent = LANG_CODES[currentLang];
+  document.querySelectorAll('.lang-option').forEach(opt=>{
+    opt.classList.toggle('active', opt.dataset.lang === currentLang);
+  });
+
+  applyStaticI18n();
+
+  document.querySelectorAll('.emo-tile .label').forEach(el=>{
+    el.textContent = tEmotion(el.dataset.emoLabel);
+  });
+  renderIntensity();
+  renderWeekdays();
+  updateMoodWindow();
+  buildWheelSVG();
+  updateWheelUI();
+  renderCalendar();
+  if(currentModalEntry) openDayModal(currentModalEntry);
+
+  try{ window.storage.set('emotio:lang', lang); } catch(e){}
+}
+
+document.getElementById('langBtn').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  const menu = document.getElementById('langMenu');
+  const willShow = !menu.classList.contains('show');
+  menu.classList.toggle('show', willShow);
+  document.getElementById('langBtn').setAttribute('aria-expanded', willShow ? 'true' : 'false');
+});
+document.querySelectorAll('.lang-option').forEach(opt=>{
+  opt.addEventListener('click', ()=>{
+    applyLanguage(opt.dataset.lang);
+    document.getElementById('langMenu').classList.remove('show');
+    document.getElementById('langBtn').setAttribute('aria-expanded', 'false');
+  });
+});
+document.addEventListener('click', (e)=>{
+  const switcher = document.querySelector('.lang-switcher');
+  if(switcher && !switcher.contains(e.target)){
+    document.getElementById('langMenu').classList.remove('show');
+    document.getElementById('langBtn').setAttribute('aria-expanded', 'false');
+  }
+});
+
+(async function init(){
+  renderWeekdays();
+  try{
+    const savedLang = await window.storage.get('emotio:lang');
+    if(savedLang && I18N[savedLang.value]) applyLanguage(savedLang.value);
+    else applyLanguage('en');
+  } catch(e){
+    applyLanguage('en');
+  }
+
+  const entries = await loadHistory();
+  const today = entries.find(e=> e.date === todayKey());
+  if(today){
+    state.felt = {...today.felt};
+    state.avoid = new Set(today.avoid || []);
+    state.want = new Set(today.want || []);
+    diaryText.value = today.note || '';
+    charCount.textContent = diaryText.value.length;
+    document.querySelectorAll('.emo-tile').forEach(t=>{
+      const mode = t.dataset.mode, key = t.dataset.key;
+      if(mode==='felt' && state.felt[key] !== undefined) t.classList.add('selected');
+      if(mode!=='felt' && state[mode].has(key)) t.classList.add('selected');
+    });
+    renderIntensity();
+    updateMoodWindow();
+  }
+  await refreshAndRenderCalendar();
+
+  const savedWheel = await loadWheelState();
+  if(savedWheel){
+    wheelState.spinsUsed = savedWheel.spinsUsed || 0;
+    wheelState.seek = savedWheel.seek || null;
+    wheelState.avoid = savedWheel.avoid || null;
+    wheelState.currentRotation = savedWheel.currentRotation || 0;
+    const svg = document.getElementById('wheelSvg');
+    svg.style.transition = 'none';
+    svg.style.transform = `rotate(${wheelState.currentRotation}deg)`;
+    requestAnimationFrame(()=>{ svg.style.transition = ''; });
+  }
+  updateWheelUI();
+})();
+</script>
+</body>
+</html>
